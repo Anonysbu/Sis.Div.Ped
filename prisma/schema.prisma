@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Contrato {
+  id    String @id @default(cuid())
+  nome  String
+  itens Item[]
+}
+
+model Item {
+  id              String   @id @default(cuid())
+  nome            String
+  unidade         String
+  valorUnitario   Float
+  recursosElegiveis String
+  contrato        Contrato @relation(fields: [contratoId], references: [id])
+  contratoId      String
+}
+
+model Recurso {
+  id   String @id @default(cuid())
+  nome String
+}
+
