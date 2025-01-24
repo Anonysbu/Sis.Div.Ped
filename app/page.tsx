@@ -319,7 +319,7 @@ export default function DivisaoPedidos() {
         )}
       </div>
 
-      {divisaoResultado && Object.keys(divisaoResultado).length > 0 ? (
+      {divisaoResultado && (
         <Card className="bg-white shadow-md">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-blue-600">Resultado da Divisão</CardTitle>
@@ -329,9 +329,6 @@ export default function DivisaoPedidos() {
               {recursosSelecionados.map((recursoId) => {
                 const dados = divisaoResultado[recursoId]
                 if (!dados) return null
-
-                const temItens = Object.keys(dados.itens).length > 0
-                if (!temItens) return null
 
                 return (
                   <Accordion type="single" collapsible className="mb-4" key={recursoId}>
@@ -348,13 +345,21 @@ export default function DivisaoPedidos() {
                             return (
                               <li key={itemId} className="p-2 border rounded">
                                 <div className="flex justify-between items-center">
-                                  <span className="text-sm text-gray-600">
-                                    {item.nome}: {itemDados.quantidade} {item.unidade} - R${" "}
-                                    {itemDados.valorTotal.toFixed(2)}
-                                  </span>
+                                  <div className="flex-1">
+                                    <span className="text-sm font-medium text-gray-700">{item.nome}</span>
+                                    <div className="text-sm text-gray-600">
+                                      Quantidade: {itemDados.quantidade} {item.unidade}
+                                      <br />
+                                      Valor Total: R$ {itemDados.valorTotal.toFixed(2)}
+                                    </div>
+                                  </div>
                                   <Dialog>
                                     <DialogTrigger asChild>
-                                      <Button variant="outline" size="sm" className="text-blue-600 border-blue-600">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="ml-4 text-blue-600 border-blue-600"
+                                      >
                                         <ArrowRightLeft className="mr-2 h-4 w-4" />
                                         Transferir
                                       </Button>
@@ -365,7 +370,7 @@ export default function DivisaoPedidos() {
                                           Transferir Item
                                         </DialogTitle>
                                         <DialogDescription>
-                                          Transferir {item?.nome} de{" "}
+                                          Transferir {item.nome} de{" "}
                                           {RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)?.nome}
                                         </DialogDescription>
                                       </DialogHeader>
@@ -373,6 +378,8 @@ export default function DivisaoPedidos() {
                                         <Input
                                           type="number"
                                           placeholder="Quantidade"
+                                          min={1}
+                                          max={itemDados.quantidade}
                                           value={quantidadeTransferencia[`${itemId}-${recursoId}`] || ""}
                                           onChange={(e) =>
                                             setQuantidadeTransferencia((prev) => ({
@@ -396,7 +403,7 @@ export default function DivisaoPedidos() {
                                           </SelectTrigger>
                                           <SelectContent>
                                             {recursosSelecionados
-                                              .filter((id) => id !== recursoId && item?.recursosElegiveis.includes(id))
+                                              .filter((id) => id !== recursoId && item.recursosElegiveis.includes(id))
                                               .map((id) => (
                                                 <SelectItem key={id} value={id}>
                                                   {RECURSOS_PREDEFINIDOS.find((r) => r.id === id)?.nome}
@@ -426,7 +433,7 @@ export default function DivisaoPedidos() {
             </ScrollArea>
           </CardContent>
         </Card>
-      ) : null}
+      )}
     </div>
   )
 }
