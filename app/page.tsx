@@ -44,6 +44,7 @@ export default function DivisaoPedidos() {
   const [quantidadeTransferencia, setQuantidadeTransferencia] = useState<{ [key: string]: number }>({})
   const [recursoDestino, setRecursoDestino] = useState<{ [key: string]: string }>({})
   const [todosRecursosSelecionados, setTodosRecursosSelecionados] = useState(false)
+  const [todosRecursosElegiveis, setTodosRecursosElegiveis] = useState(false)
 
   const handleAdicionarItemAoContrato = () => {
     setNovoContrato((prev) => ({
@@ -93,6 +94,21 @@ export default function DivisaoPedidos() {
       recursosSelecionados.forEach((recursoId) => {
         toggleRecursoSelecionado(recursoId)
       })
+    }
+  }
+
+  const handleToggleTodosRecursosElegiveis = () => {
+    setTodosRecursosElegiveis(!todosRecursosElegiveis)
+    if (!todosRecursosElegiveis) {
+      setNovoItem((prev) => ({
+        ...prev,
+        recursosElegiveis: RECURSOS_PREDEFINIDOS.map((r) => r.id),
+      }))
+    } else {
+      setNovoItem((prev) => ({
+        ...prev,
+        recursosElegiveis: [],
+      }))
     }
   }
 
@@ -154,6 +170,16 @@ export default function DivisaoPedidos() {
                 <div>
                   <Label className="text-sm font-medium text-gray-700">Recursos Elegíveis</Label>
                   <div className="space-y-2 mt-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="todos-recursos-elegiveis"
+                        checked={todosRecursosElegiveis}
+                        onCheckedChange={handleToggleTodosRecursosElegiveis}
+                      />
+                      <Label htmlFor="todos-recursos-elegiveis" className="text-sm text-gray-600">
+                        Selecionar Todos
+                      </Label>
+                    </div>
                     {RECURSOS_PREDEFINIDOS.map((recurso) => (
                       <div key={recurso.id} className="flex items-center space-x-2">
                         <Checkbox

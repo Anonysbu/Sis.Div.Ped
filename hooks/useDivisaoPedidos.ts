@@ -143,6 +143,8 @@ export function useDivisaoPedidos() {
     const contrato = contratos.find((c) => c.id === contratoId)
     setContratoSelecionado(contrato || null)
     setItensPedido(contrato ? contrato.itens.map((item) => ({ itemId: item.id, quantidade: 0 })) : [])
+    // Resetar recursos selecionados quando um novo contrato é selecionado
+    setRecursosSelecionados([])
   }
 
   const atualizarQuantidadeItem = (itemId: string, quantidade: number) => {
@@ -156,6 +158,8 @@ export function useDivisaoPedidos() {
   }
 
   const calcularDivisao = () => {
+    if (!contratoSelecionado) return
+
     const divisao: DivisaoResultado = {}
 
     recursosSelecionados.forEach((recursoId) => {
@@ -163,7 +167,9 @@ export function useDivisaoPedidos() {
     })
 
     itensPedido.forEach((ip) => {
-      const item = contratoSelecionado!.itens.find((i) => i.id === ip.itemId)!
+      const item = contratoSelecionado.itens.find((i) => i.id === ip.itemId)
+      if (!item) return
+
       const recursosElegiveis = recursosSelecionados.filter((r) => item.recursosElegiveis.includes(r))
       const quantidadePorRecurso = Math.floor(ip.quantidade / recursosElegiveis.length)
       let restante = ip.quantidade % recursosElegiveis.length
@@ -189,7 +195,8 @@ export function useDivisaoPedidos() {
     if (!divisaoResultado || !contratoSelecionado) return
 
     const novoResultado = JSON.parse(JSON.stringify(divisaoResultado))
-    const item = contratoSelecionado.itens.find((i) => i.id === itemId)!
+    const item = contratoSelecionado.itens.find((i) => i.id === itemId)
+    if (!item) return
 
     if (
       item.recursosElegiveis.includes(recursoDestinoId) &&
