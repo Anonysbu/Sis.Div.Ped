@@ -158,31 +158,46 @@ export function useDivisaoPedidos() {
   }
 
   const calcularDivisao = () => {
-    if (!contratoSelecionado) return
+    if (!contratoSelecionado || itensPedido.length === 0 || recursosSelecionados.length === 0) {
+      setDivisaoResultado(null)
+      return
+    }
 
     const divisao: DivisaoResultado = {}
 
+    // Inicializar estrutura para cada recurso selecionado
     recursosSelecionados.forEach((recursoId) => {
       divisao[recursoId] = { itens: {}, valorTotal: 0 }
     })
 
+    // Para cada item do pedido
     itensPedido.forEach((ip) => {
+      if (ip.quantidade <= 0) return // Pular itens com quantidade zero ou negativa
+
       const item = contratoSelecionado.itens.find((i) => i.id === ip.itemId)
       if (!item) return
 
+      // Filtrar apenas recursos elegíveis que foram selecionados
       const recursosElegiveis = recursosSelecionados.filter((r) => item.recursosElegiveis.includes(r))
+      if (recursosElegiveis.length === 0) return
+
       const quantidadePorRecurso = Math.floor(ip.quantidade / recursosElegiveis.length)
       let restante = ip.quantidade % recursosElegiveis.length
 
       recursosElegiveis.forEach((recursoId) => {
+        // Calcular quantidade para este recurso
         const quantidadeAtribuida = quantidadePorRecurso + (restante > 0 ? 1 : 0)
-        const valorTotal = quantidadeAtribuida * item.valorUnitario
+        if (quantidadeAtribuida <= 0) return
 
+        // Calcular valor total para este item
+        const valorTotal = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2))
+
+        // Atualizar dados do recurso
         divisao[recursoId].itens[ip.itemId] = {
           quantidade: quantidadeAtribuida,
           valorTotal: valorTotal,
         }
-        divisao[recursoId].valorTotal += valorTotal
+        divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotal).toFixed(2))
 
         restante--
       })
@@ -198,30 +213,50 @@ export function useDivisaoPedidos() {
     const item = contratoSelecionado.itens.find((i) => i.id === itemId)
     if (!item) return
 
+    // Verificar se a transferência é válida
     if (
-      item.recursosElegiveis.includes(recursoDestinoId) &&
-      novoResultado[recursoOrigemId].itens[itemId] &&
-      novoResultado[recursoOrigemId].itens[itemId].quantidade >= quantidade
+      !item.recursosElegiveis.includes(recursoDestinoId) ||
+      !novoResultado[recursoOrigemId]?.itens[itemId] ||
+      novoResultado[recursoOrigemId].itens[itemId].quantidade < quantidade
     ) {
-      // Remover do recurso de origem
-      novoResultado[recursoOrigemId].itens[itemId].quantidade -= quantidade
-      novoResultado[recursoOrigemId].itens[itemId].valorTotal -= quantidade * item.valorUnitario
-      novoResultado[recursoOrigemId].valorTotal -= quantidade * item.valorUnitario
-
-      if (novoResultado[recursoOrigemId].itens[itemId].quantidade === 0) {
-        delete novoResultado[recursoOrigemId].itens[itemId]
-      }
-
-      // Adicionar ao recurso de destino
-      if (!novoResultado[recursoDestinoId].itens[itemId]) {
-        novoResultado[recursoDestinoId].itens[itemId] = { quantidade: 0, valorTotal: 0 }
-      }
-      novoResultado[recursoDestinoId].itens[itemId].quantidade += quantidade
-      novoResultado[recursoDestinoId].itens[itemId].valorTotal += quantidade * item.valorUnitario
-      novoResultado[recursoDestinoId].valorTotal += quantidade * item.valorUnitario
-
-      setDivisaoResultado(novoResultado)
+      return
     }
+
+    // Calcular valores com precisão fixa
+    const valorUnitario = Number(item.valorUnitario)
+    const valorTransferencia = Number((quantidade * valorUnitario).toFixed(2))
+
+    // Atualizar recurso de origem
+    novoResultado[recursoOrigemId].itens[itemId].quantidade -= quantidade
+    novoResultado[recursoOrigemId].itens[itemId].valorTotal = Number(
+      (novoResultado[recursoOrigemId].itens[itemId].quantidade * valorUnitario).toFixed(2),
+    )
+    novoResultado[recursoOrigemId].valorTotal = Number(
+      (novoResultado[recursoOrigemId].valorTotal - valorTransferencia).toFixed(2),
+    )
+
+    // Remover item se quantidade chegou a zero
+    if (novoResultado[recursoOrigemId].itens[itemId].quantidade === 0) {
+      delete novoResultado[recursoOrigemId].itens[itemId]
+    }
+
+    // Atualizar recurso de destino
+    if (!novoResultado[recursoDestinoId].itens[itemId]) {
+      novoResultado[recursoDestinoId].itens[itemId] = {
+        quantidade: 0,
+        valorTotal: 0,
+      }
+    }
+
+    novoResultado[recursoDestinoId].itens[itemId].quantidade += quantidade
+    novoResultado[recursoDestinoId].itens[itemId].valorTotal = Number(
+      (novoResultado[recursoDestinoId].itens[itemId].quantidade * valorUnitario).toFixed(2),
+    )
+    novoResultado[recursoDestinoId].valorTotal = Number(
+      (novoResultado[recursoDestinoId].valorTotal + valorTransferencia).toFixed(2),
+    )
+
+    setDivisaoResultado(novoResultado)
   }
 
   const exportarParaPlanilha = () => {

@@ -319,7 +319,7 @@ export default function DivisaoPedidos() {
         )}
       </div>
 
-      {divisaoResultado && (
+      {divisaoResultado && Object.keys(divisaoResultado).length > 0 ? (
         <Card className="bg-white shadow-md">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-blue-600">Resultado da Divisão</CardTitle>
@@ -328,6 +328,11 @@ export default function DivisaoPedidos() {
             <ScrollArea className="h-[400px]">
               {recursosSelecionados.map((recursoId) => {
                 const dados = divisaoResultado[recursoId]
+                if (!dados) return null
+
+                const temItens = Object.keys(dados.itens).length > 0
+                if (!temItens) return null
+
                 return (
                   <Accordion type="single" collapsible className="mb-4" key={recursoId}>
                     <AccordionItem value={recursoId}>
@@ -335,14 +340,16 @@ export default function DivisaoPedidos() {
                         {RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)?.nome} - R$ {dados.valorTotal.toFixed(2)}
                       </AccordionTrigger>
                       <AccordionContent>
-                        <ul>
+                        <ul className="space-y-2">
                           {Object.entries(dados.itens).map(([itemId, itemDados]) => {
                             const item = contratoSelecionado?.itens.find((i) => i.id === itemId)
+                            if (!item) return null
+
                             return (
-                              <li key={itemId} className="mb-2 p-2 border rounded">
+                              <li key={itemId} className="p-2 border rounded">
                                 <div className="flex justify-between items-center">
                                   <span className="text-sm text-gray-600">
-                                    {item?.nome}: {itemDados.quantidade} {item?.unidade} - R${" "}
+                                    {item.nome}: {itemDados.quantidade} {item.unidade} - R${" "}
                                     {itemDados.valorTotal.toFixed(2)}
                                   </span>
                                   <Dialog>
@@ -419,7 +426,7 @@ export default function DivisaoPedidos() {
             </ScrollArea>
           </CardContent>
         </Card>
-      )}
+      ) : null}
     </div>
   )
 }
