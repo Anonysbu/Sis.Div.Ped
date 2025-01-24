@@ -319,7 +319,7 @@ export default function DivisaoPedidos() {
         )}
       </div>
 
-      {divisaoResultado && (
+      {divisaoResultado && Object.keys(divisaoResultado).length > 0 && (
         <Card className="bg-white shadow-md">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-blue-600">Resultado da Divisão</CardTitle>
@@ -328,13 +328,16 @@ export default function DivisaoPedidos() {
             <ScrollArea className="h-[400px]">
               {recursosSelecionados.map((recursoId) => {
                 const dados = divisaoResultado[recursoId]
-                if (!dados) return null
+                if (!dados || Object.keys(dados.itens).length === 0) return null
 
                 return (
                   <Accordion type="single" collapsible className="mb-4" key={recursoId}>
                     <AccordionItem value={recursoId}>
-                      <AccordionTrigger className="text-sm font-medium text-gray-700">
-                        {RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)?.nome} - R$ {dados.valorTotal.toFixed(2)}
+                      <AccordionTrigger className="text-sm font-medium text-gray-700 hover:bg-gray-50">
+                        <div className="flex justify-between w-full pr-4">
+                          <span>{RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)?.nome}</span>
+                          <span className="font-semibold">R$ {dados.valorTotal.toFixed(2)}</span>
+                        </div>
                       </AccordionTrigger>
                       <AccordionContent>
                         <ul className="space-y-2">
@@ -346,76 +349,72 @@ export default function DivisaoPedidos() {
                               <li key={itemId} className="p-2 border rounded">
                                 <div className="flex justify-between items-center">
                                   <div className="flex-1">
-                                    <span className="text-sm font-medium text-gray-700">{item.nome}</span>
+                                    <span className="text-sm font-medium">{item.nome}</span>
                                     <div className="text-sm text-gray-600">
-                                      Quantidade: {itemDados.quantidade} {item.unidade}
-                                      <br />
-                                      Valor Total: R$ {itemDados.valorTotal.toFixed(2)}
+                                      {itemDados.quantidade} {item.unidade} x R$ {item.valorUnitario.toFixed(2)} = R${" "}
+                                      {itemDados.valorTotal.toFixed(2)}
                                     </div>
                                   </div>
                                   <Dialog>
                                     <DialogTrigger asChild>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="ml-4 text-blue-600 border-blue-600"
-                                      >
-                                        <ArrowRightLeft className="mr-2 h-4 w-4" />
+                                      <Button variant="outline" size="sm" className="ml-4">
+                                        <ArrowRightLeft className="h-4 w-4 mr-2" />
                                         Transferir
                                       </Button>
                                     </DialogTrigger>
                                     <DialogContent>
                                       <DialogHeader>
-                                        <DialogTitle className="text-lg font-semibold text-blue-600">
-                                          Transferir Item
-                                        </DialogTitle>
+                                        <DialogTitle>Transferir Item</DialogTitle>
                                         <DialogDescription>
                                           Transferir {item.nome} de{" "}
                                           {RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)?.nome}
                                         </DialogDescription>
                                       </DialogHeader>
-                                      <div className="flex items-center space-x-2">
-                                        <Input
-                                          type="number"
-                                          placeholder="Quantidade"
-                                          min={1}
-                                          max={itemDados.quantidade}
-                                          value={quantidadeTransferencia[`${itemId}-${recursoId}`] || ""}
-                                          onChange={(e) =>
-                                            setQuantidadeTransferencia((prev) => ({
-                                              ...prev,
-                                              [`${itemId}-${recursoId}`]: Number(e.target.value),
-                                            }))
-                                          }
-                                          className="w-24"
-                                        />
-                                        <Select
-                                          value={recursoDestino[`${itemId}-${recursoId}`] || ""}
-                                          onValueChange={(value) =>
-                                            setRecursoDestino((prev) => ({
-                                              ...prev,
-                                              [`${itemId}-${recursoId}`]: value,
-                                            }))
-                                          }
-                                        >
-                                          <SelectTrigger className="w-[180px]">
-                                            <SelectValue placeholder="Selecione o destino" />
-                                          </SelectTrigger>
-                                          <SelectContent>
-                                            {recursosSelecionados
-                                              .filter((id) => id !== recursoId && item.recursosElegiveis.includes(id))
-                                              .map((id) => (
-                                                <SelectItem key={id} value={id}>
-                                                  {RECURSOS_PREDEFINIDOS.find((r) => r.id === id)?.nome}
-                                                </SelectItem>
-                                              ))}
-                                          </SelectContent>
-                                        </Select>
+                                      <div className="flex items-center gap-4">
+                                        <div className="flex-1">
+                                          <Label>Quantidade</Label>
+                                          <Input
+                                            type="number"
+                                            max={itemDados.quantidade}
+                                            value={quantidadeTransferencia[`${itemId}-${recursoId}`] || ""}
+                                            onChange={(e) =>
+                                              setQuantidadeTransferencia((prev) => ({
+                                                ...prev,
+                                                [`${itemId}-${recursoId}`]: Number(e.target.value),
+                                              }))
+                                            }
+                                          />
+                                        </div>
+                                        <div className="flex-1">
+                                          <Label>Destino</Label>
+                                          <Select
+                                            value={recursoDestino[`${itemId}-${recursoId}`] || ""}
+                                            onValueChange={(value) =>
+                                              setRecursoDestino((prev) => ({
+                                                ...prev,
+                                                [`${itemId}-${recursoId}`]: value,
+                                              }))
+                                            }
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue placeholder="Selecione" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {recursosSelecionados
+                                                .filter((id) => id !== recursoId && item.recursosElegiveis.includes(id))
+                                                .map((id) => (
+                                                  <SelectItem key={id} value={id}>
+                                                    {RECURSOS_PREDEFINIDOS.find((r) => r.id === id)?.nome}
+                                                  </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
                                         <Button
                                           onClick={() => handleTransferirItem(itemId, recursoId)}
-                                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                                          className="mt-auto"
                                         >
-                                          Transferir
+                                          Confirmar
                                         </Button>
                                       </div>
                                     </DialogContent>

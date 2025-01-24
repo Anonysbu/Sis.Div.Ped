@@ -158,27 +158,33 @@ export function useDivisaoPedidos() {
   }
 
   const calcularDivisao = () => {
-    if (!contratoSelecionado || itensPedido.length === 0 || recursosSelecionados.length === 0) {
+    if (!contratoSelecionado) return
+
+    // Verificar se há itens com quantidade maior que zero
+    const itensComQuantidade = itensPedido.filter((ip) => ip.quantidade > 0)
+    if (itensComQuantidade.length === 0 || recursosSelecionados.length === 0) {
       setDivisaoResultado(null)
       return
     }
 
     const divisao: DivisaoResultado = {}
 
-    // Inicializar estrutura para cada recurso selecionado
+    // Inicializar todos os recursos selecionados
     recursosSelecionados.forEach((recursoId) => {
-      divisao[recursoId] = { itens: {}, valorTotal: 0 }
+      divisao[recursoId] = {
+        itens: {},
+        valorTotal: 0,
+      }
     })
 
-    // Para cada item do pedido
-    itensPedido.forEach((ip) => {
-      if (ip.quantidade <= 0) return // Pular itens com quantidade zero ou negativa
-
+    // Distribuir os itens
+    itensComQuantidade.forEach((ip) => {
       const item = contratoSelecionado.itens.find((i) => i.id === ip.itemId)
       if (!item) return
 
       // Filtrar apenas recursos elegíveis que foram selecionados
       const recursosElegiveis = recursosSelecionados.filter((r) => item.recursosElegiveis.includes(r))
+
       if (recursosElegiveis.length === 0) return
 
       const quantidadePorRecurso = Math.floor(ip.quantidade / recursosElegiveis.length)
@@ -187,7 +193,6 @@ export function useDivisaoPedidos() {
       recursosElegiveis.forEach((recursoId) => {
         // Calcular quantidade para este recurso
         const quantidadeAtribuida = quantidadePorRecurso + (restante > 0 ? 1 : 0)
-        if (quantidadeAtribuida <= 0) return
 
         // Calcular valor total para este item
         const valorTotal = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2))
@@ -197,6 +202,7 @@ export function useDivisaoPedidos() {
           quantidade: quantidadeAtribuida,
           valorTotal: valorTotal,
         }
+
         divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotal).toFixed(2))
 
         restante--
