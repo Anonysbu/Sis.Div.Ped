@@ -459,6 +459,26 @@ export default function DivisaoPedidos() {
       {!(divisaoResultado && Object.keys(divisaoResultado).length > 0) && (
         <p className="text-center text-gray-600">Nenhum item para exibir no resultado da divisão.</p>
       )}
+      {/* Debug section */}
+      {process.env.NODE_ENV === "development" && (
+        <div className="mt-8 p-4 bg-gray-100 rounded-lg">
+          <h3 className="text-lg font-bold mb-2">Debug Info:</h3>
+          <div className="space-y-2">
+            <p>Contrato Selecionado: {contratoSelecionado?.nome || "Nenhum"}</p>
+            <p>Recursos Selecionados: {recursosSelecionados.join(", ") || "Nenhum"}</p>
+            <p>Itens com quantidade:</p>
+            <pre className="bg-white p-2 rounded">
+              {JSON.stringify(
+                itensPedido.filter((ip) => ip.quantidade > 0),
+                null,
+                2,
+              )}
+            </pre>
+            <p>Resultado da Divisão:</p>
+            <pre className="bg-white p-2 rounded">{JSON.stringify(divisaoResultado, null, 2)}</pre>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

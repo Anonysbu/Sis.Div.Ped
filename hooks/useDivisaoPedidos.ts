@@ -173,14 +173,28 @@ export function useDivisaoPedidos() {
       return
     }
 
+    console.log("Iniciando cálculo da divisão:")
+    console.log("Contrato selecionado:", contratoSelecionado)
+    console.log("Itens do pedido:", itensPedido)
+    console.log("Recursos selecionados:", recursosSelecionados)
+
+    // Filtrar itens com quantidade maior que 0
     const itensComQuantidade = itensPedido.filter((ip) => ip.quantidade > 0)
-    if (itensComQuantidade.length === 0 || recursosSelecionados.length === 0) {
-      console.log("Sem itens com quantidade ou recursos selecionados")
+    console.log("Itens com quantidade > 0:", itensComQuantidade)
+
+    if (itensComQuantidade.length === 0) {
+      console.log("Nenhum item com quantidade")
       setDivisaoResultado(null)
       return
     }
 
-    // Initialize the division result structure
+    if (recursosSelecionados.length === 0) {
+      console.log("Nenhum recurso selecionado")
+      setDivisaoResultado(null)
+      return
+    }
+
+    // Inicializar o objeto de resultado
     const divisao: DivisaoResultado = {}
     recursosSelecionados.forEach((recursoId) => {
       divisao[recursoId] = {
@@ -189,41 +203,65 @@ export function useDivisaoPedidos() {
       }
     })
 
-    // Process each item
+    // Processar cada item com quantidade
     itensComQuantidade.forEach((ip) => {
       const item = contratoSelecionado.itens.find((i) => i.id === ip.itemId)
-      if (!item) return
+      if (!item) {
+        console.log(`Item não encontrado: ${ip.itemId}`)
+        return
+      }
 
-      const recursosElegiveis = recursosSelecionados.filter((recursoId) => item.recursosElegiveis.includes(recursoId))
+      console.log(`Processando item: ${item.nome}`)
+      console.log(`Quantidade total: ${ip.quantidade}`)
+      console.log(`Recursos elegíveis: ${item.recursosElegiveis}`)
 
-      if (recursosElegiveis.length === 0) return
+      // Filtrar recursos selecionados que são elegíveis para este item
+      const recursosElegiveisDisponiveis = recursosSelecionados.filter((recursoId) =>
+        item.recursosElegiveis.includes(recursoId),
+      )
 
-      const quantidadePorRecurso = Math.floor(ip.quantidade / recursosElegiveis.length)
-      let restante = ip.quantidade % recursosElegiveis.length
+      console.log(`Recursos elegíveis disponíveis: ${recursosElegiveisDisponiveis}`)
 
-      recursosElegiveis.forEach((recursoId) => {
+      if (recursosElegiveisDisponiveis.length === 0) {
+        console.log(`Nenhum recurso elegível disponível para o item: ${item.nome}`)
+        return
+      }
+
+      // Calcular a divisão da quantidade
+      const quantidadePorRecurso = Math.floor(ip.quantidade / recursosElegiveisDisponiveis.length)
+      let restante = ip.quantidade % recursosElegiveisDisponiveis.length
+
+      console.log(`Quantidade por recurso: ${quantidadePorRecurso}`)
+      console.log(`Restante: ${restante}`)
+
+      // Distribuir os itens
+      recursosElegiveisDisponiveis.forEach((recursoId) => {
         const quantidadeAtribuida = quantidadePorRecurso + (restante > 0 ? 1 : 0)
         const valorTotalItem = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2))
 
-        // Ensure the items object exists
+        console.log(`Atribuindo ao recurso ${recursoId}:`)
+        console.log(`- Quantidade: ${quantidadeAtribuida}`)
+        console.log(`- Valor total: ${valorTotalItem}`)
+
+        // Garantir que a estrutura de itens existe
         if (!divisao[recursoId].itens) {
           divisao[recursoId].itens = {}
         }
 
-        // Add the item to the resource
+        // Atribuir o item ao recurso
         divisao[recursoId].itens[ip.itemId] = {
           quantidade: quantidadeAtribuida,
           valorTotal: valorTotalItem,
         }
 
-        // Update the total value for the resource
+        // Atualizar o valor total do recurso
         divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotalItem).toFixed(2))
 
         if (restante > 0) restante--
       })
     })
 
-    console.log("Resultado da divisão:", divisao)
+    console.log("Resultado final da divisão:", divisao)
     setDivisaoResultado(divisao)
   }, [contratoSelecionado, itensPedido, recursosSelecionados])
 
