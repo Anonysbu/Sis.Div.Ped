@@ -432,14 +432,11 @@ ws["!merges"] = [
   { s: { r: 3, c: 1 }, e: { r: 3, c: 4 } }  // Mesclar B4:E4
 ];
 
-// Aplicar valores e alinhamento ao centro
-ws["A1"] = { v: "ITEM", s: { alignment: { horizontal: "center", vertical: "center" } } };
-ws["B4"] = { v: "TOTAL", s: { alignment: { horizontal: "center", vertical: "center" } } };
 
 
       // Ajustar largura das colunas
       const colunas = ["A", "B", "C", "D", "E", "F"]
-      const larguras = [5, 35, 15, 15, 20, 20]
+      const larguras = [5, 30, 12, 12, 17, 17]
       ws["!cols"] = larguras.map((w) => ({ wch: w }))
 
       // Adicionar estilos
