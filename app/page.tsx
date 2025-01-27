@@ -281,109 +281,111 @@ export default function DivisaoPedidos() {
         </Alert>
       )}
 
-      <Dialog>
-        <DialogTrigger asChild>
-          <Button className="mb-6 w-full max-w-md mx-auto block bg-blue-600 hover:bg-blue-700 text-white">
-            <PlusCircle className="h-5 w-5 mr-2" />
-            Adicionar Novo Contrato
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-3xl w-[95vw]">
-          <DialogHeader>
-            <DialogTitle>Adicionar Novo Contrato</DialogTitle>
-          </DialogHeader>
-          <Card className="bg-white">
-            <CardContent className="space-y-4 p-4 max-h-[80vh] overflow-y-auto">
-              <div>
-                <Label htmlFor="nomeContrato" className="text-sm font-medium text-gray-700">
-                  Nome do Contrato
-                </Label>
-                <Input
-                  id="nomeContrato"
-                  value={novoContrato.nome}
-                  onChange={(e) => setNovoContrato((prev) => ({ ...prev, nome: e.target.value }))}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="nomeItem" className="text-sm font-medium text-gray-700">
-                  Nome do Item
-                </Label>
-                <Input
-                  id="nomeItem"
-                  value={novoItem.nome}
-                  onChange={(e) => setNovoItem((prev) => ({ ...prev, nome: e.target.value }))}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="unidadeItem" className="text-sm font-medium text-gray-700">
-                  Unidade
-                </Label>
-                <Input
-                  id="unidadeItem"
-                  value={novoItem.unidade}
-                  onChange={(e) => setNovoItem((prev) => ({ ...prev, unidade: e.target.value }))}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="valorUnitarioItem" className="text-sm font-medium text-gray-700">
-                  Valor Unitário
-                </Label>
-                <Input
-                  id="valorUnitarioItem"
-                  type="number"
-                  value={novoItem.valorUnitario}
-                  onChange={(e) => setNovoItem((prev) => ({ ...prev, valorUnitario: Number(e.target.value) }))}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label className="text-sm font-medium text-gray-700">Recursos Elegíveis</Label>
-                <div className="space-y-2 mt-1">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="todos-recursos-elegiveis"
-                      checked={todosRecursosElegiveis}
-                      onCheckedChange={handleToggleTodosRecursosElegiveis}
-                    />
-                    <Label htmlFor="todos-recursos-elegiveis" className="text-sm text-gray-600">
-                      Selecionar Todos
-                    </Label>
-                  </div>
-                  {RECURSOS_PREDEFINIDOS.map((recurso) => (
-                    <div key={recurso.id} className="flex items-center space-x-2">
+      <div className="flex justify-center mb-6">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button className="w-full max-w-[400px] bg-blue-600 hover:bg-blue-700">
+              <PlusCircle className="h-5 w-5 mr-2" />
+              Adicionar Novo Contrato
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-3xl w-[95vw]">
+            <DialogHeader>
+              <DialogTitle>Adicionar Novo Contrato</DialogTitle>
+            </DialogHeader>
+            <Card className="bg-white">
+              <CardContent className="space-y-4 p-4 max-h-[80vh] overflow-y-auto">
+                <div>
+                  <Label htmlFor="nomeContrato" className="text-sm font-medium text-gray-700">
+                    Nome do Contrato
+                  </Label>
+                  <Input
+                    id="nomeContrato"
+                    value={novoContrato.nome}
+                    onChange={(e) => setNovoContrato((prev) => ({ ...prev, nome: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="nomeItem" className="text-sm font-medium text-gray-700">
+                    Nome do Item
+                  </Label>
+                  <Input
+                    id="nomeItem"
+                    value={novoItem.nome}
+                    onChange={(e) => setNovoItem((prev) => ({ ...prev, nome: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="unidadeItem" className="text-sm font-medium text-gray-700">
+                    Unidade
+                  </Label>
+                  <Input
+                    id="unidadeItem"
+                    value={novoItem.unidade}
+                    onChange={(e) => setNovoItem((prev) => ({ ...prev, unidade: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="valorUnitarioItem" className="text-sm font-medium text-gray-700">
+                    Valor Unitário
+                  </Label>
+                  <Input
+                    id="valorUnitarioItem"
+                    type="number"
+                    value={novoItem.valorUnitario}
+                    onChange={(e) => setNovoItem((prev) => ({ ...prev, valorUnitario: Number(e.target.value) }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Recursos Elegíveis</Label>
+                  <div className="space-y-2 mt-1">
+                    <div className="flex items-center space-x-2">
                       <Checkbox
-                        id={`recurso-${recurso.id}`}
-                        checked={novoItem.recursosElegiveis.includes(recurso.id)}
-                        onCheckedChange={() => toggleRecursoElegivel(recurso.id)}
+                        id="todos-recursos-elegiveis"
+                        checked={todosRecursosElegiveis}
+                        onCheckedChange={handleToggleTodosRecursosElegiveis}
                       />
-                      <Label htmlFor={`recurso-${recurso.id}`} className="text-sm text-gray-600">
-                        {recurso.nome}
+                      <Label htmlFor="todos-recursos-elegiveis" className="text-sm text-gray-600">
+                        Selecionar Todos
                       </Label>
+                    </div>
+                    {RECURSOS_PREDEFINIDOS.map((recurso) => (
+                      <div key={recurso.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`recurso-${recurso.id}`}
+                          checked={novoItem.recursosElegiveis.includes(recurso.id)}
+                          onCheckedChange={() => toggleRecursoElegivel(recurso.id)}
+                        />
+                        <Label htmlFor={`recurso-${recurso.id}`} className="text-sm text-gray-600">
+                          {recurso.nome}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <Button onClick={handleAdicionarItemAoContrato} className="w-full">
+                  Adicionar Item ao Contrato
+                </Button>
+                <div>
+                  <h3 className="font-bold mb-2 text-sm text-gray-700">Itens do Contrato</h3>
+                  {novoContrato.itens.map((item, index) => (
+                    <div key={index} className="mb-2 text-sm text-gray-600">
+                      {item.nome} - {item.unidade} - R$ {item.valorUnitario.toFixed(2)}
                     </div>
                   ))}
                 </div>
-              </div>
-              <Button onClick={handleAdicionarItemAoContrato} className="w-full">
-                Adicionar Item ao Contrato
-              </Button>
-              <div>
-                <h3 className="font-bold mb-2 text-sm text-gray-700">Itens do Contrato</h3>
-                {novoContrato.itens.map((item, index) => (
-                  <div key={index} className="mb-2 text-sm text-gray-600">
-                    {item.nome} - {item.unidade} - R$ {item.valorUnitario.toFixed(2)}
-                  </div>
-                ))}
-              </div>
-              <Button onClick={handleAdicionarContrato} className="w-full bg-blue-600 hover:bg-blue-700">
-                Salvar Contrato
-              </Button>
-            </CardContent>
-          </Card>
-        </DialogContent>
-      </Dialog>
+                <Button onClick={handleAdicionarContrato} className="w-full bg-blue-600 hover:bg-blue-700">
+                  Salvar Contrato
+                </Button>
+              </CardContent>
+            </Card>
+          </DialogContent>
+        </Dialog>
+      </div>
 
       <Card className="mb-6 bg-white shadow-md">
         <CardHeader>
