@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Switch } from "@/components/ui/switch"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function DivisaoPedidos() {
   const {
@@ -45,6 +46,7 @@ export default function DivisaoPedidos() {
   const [recursoDestino, setRecursoDestino] = useState<{ [key: string]: string }>({})
   const [todosRecursosSelecionados, setTodosRecursosSelecionados] = useState(false)
   const [todosRecursosElegiveis, setTodosRecursosElegiveis] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const handleAdicionarItemAoContrato = useCallback(() => {
     setNovoContrato((prev) => ({
@@ -108,6 +110,23 @@ export default function DivisaoPedidos() {
     }))
   }, [todosRecursosElegiveis, RECURSOS_PREDEFINIDOS])
 
+  const handleCalcularDivisao = useCallback(() => {
+    setError(null)
+    if (!contratoSelecionado) {
+      setError("Selecione um contrato antes de calcular a divisão.")
+      return
+    }
+    if (itensPedido.filter((ip) => ip.quantidade > 0).length === 0) {
+      setError("Adicione quantidades aos itens antes de calcular a divisão.")
+      return
+    }
+    if (recursosSelecionados.length === 0) {
+      setError("Selecione pelo menos um recurso antes de calcular a divisão.")
+      return
+    }
+    calcularDivisao()
+  }, [contratoSelecionado, itensPedido, recursosSelecionados, calcularDivisao])
+
   useEffect(() => {
     console.log("Estado do divisaoResultado na renderização:", divisaoResultado)
   }, [divisaoResultado])
@@ -115,6 +134,13 @@ export default function DivisaoPedidos() {
   return (
     <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">Sistema de Divisão de Pedidos</h1>
+
+      {error && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertTitle>Erro</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
       {/* Accordion for adding new contract */}
       <Accordion type="single" collapsible className="mb-6">
@@ -311,7 +337,7 @@ export default function DivisaoPedidos() {
 
       <div className="flex space-x-2 mb-6">
         <Button
-          onClick={calcularDivisao}
+          onClick={handleCalcularDivisao}
           className="bg-blue-600 hover:bg-blue-700 text-white"
           aria-label="Calcular divisão dos itens"
         >
@@ -328,7 +354,7 @@ export default function DivisaoPedidos() {
         )}
       </div>
 
-      {divisaoResultado && Object.keys(divisaoResultado).length > 0 && (
+      {divisaoResultado && Object.keys(divisaoResultado).length > 0 ? (
         <Card className="bg-white shadow-md">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-blue-600">Resultado da Divisão</CardTitle>
@@ -357,95 +383,92 @@ export default function DivisaoPedidos() {
                       </AccordionTrigger>
                       <AccordionContent>
                         <ul className="space-y-2">
-                          {dados.itens &&
-                            Object.entries(dados.itens).map(([itemId, itemDados]) => {
-                              const item = contratoSelecionado?.itens.find((i) => i.id === itemId)
-                              if (!item) return null
+                          {Object.entries(dados.itens).map(([itemId, itemDados]) => {
+                            const item = contratoSelecionado?.itens.find((i) => i.id === itemId)
+                            if (!item) return null
 
-                              return (
-                                <li key={itemId} className="p-2 border rounded">
-                                  <div className="flex justify-between items-center">
-                                    <div className="flex-1">
-                                      <span className="text-sm font-medium">{item.nome}</span>
-                                      <div className="text-sm text-gray-600">
-                                        {itemDados.quantidade} {item.unidade} x R$ {item.valorUnitario.toFixed(2)} = R${" "}
-                                        {itemDados.valorTotal.toFixed(2)}
-                                      </div>
+                            return (
+                              <li key={itemId} className="p-2 border rounded">
+                                <div className="flex justify-between items-center">
+                                  <div className="flex-1">
+                                    <span className="text-sm font-medium">{item.nome}</span>
+                                    <div className="text-sm text-gray-600">
+                                      {itemDados.quantidade} {item.unidade} x R$ {item.valorUnitario.toFixed(2)} = R${" "}
+                                      {itemDados.valorTotal.toFixed(2)}
                                     </div>
-                                    <Dialog>
-                                      <DialogTrigger asChild>
-                                        <Button
-                                          variant="outline"
-                                          size="sm"
-                                          className="ml-4"
-                                          aria-label={`Transferir ${item.nome}`}
-                                        >
-                                          <ArrowRightLeft className="h-4 w-4 mr-2" />
-                                          Transferir
-                                        </Button>
-                                      </DialogTrigger>
-                                      <DialogContent>
-                                        <DialogHeader>
-                                          <DialogTitle>Transferir Item</DialogTitle>
-                                          <DialogDescription>
-                                            Transferir {item.nome} de {recurso.nome}
-                                          </DialogDescription>
-                                        </DialogHeader>
-                                        <div className="flex items-center gap-4">
-                                          <div className="flex-1">
-                                            <Label>Quantidade</Label>
-                                            <Input
-                                              type="number"
-                                              max={itemDados.quantidade}
-                                              value={quantidadeTransferencia[`${itemId}-${recursoId}`] || ""}
-                                              onChange={(e) =>
-                                                setQuantidadeTransferencia((prev) => ({
-                                                  ...prev,
-                                                  [`${itemId}-${recursoId}`]: Number(e.target.value),
-                                                }))
-                                              }
-                                            />
-                                          </div>
-                                          <div className="flex-1">
-                                            <Label>Destino</Label>
-                                            <Select
-                                              value={recursoDestino[`${itemId}-${recursoId}`] || ""}
-                                              onValueChange={(value) =>
-                                                setRecursoDestino((prev) => ({
-                                                  ...prev,
-                                                  [`${itemId}-${recursoId}`]: value,
-                                                }))
-                                              }
-                                            >
-                                              <SelectTrigger>
-                                                <SelectValue placeholder="Selecione" />
-                                              </SelectTrigger>
-                                              <SelectContent>
-                                                {recursosSelecionados
-                                                  .filter(
-                                                    (id) => id !== recursoId && item.recursosElegiveis.includes(id),
-                                                  )
-                                                  .map((id) => (
-                                                    <SelectItem key={id} value={id}>
-                                                      {RECURSOS_PREDEFINIDOS.find((r) => r.id === id)?.nome}
-                                                    </SelectItem>
-                                                  ))}
-                                              </SelectContent>
-                                            </Select>
-                                          </div>
-                                          <Button
-                                            onClick={() => handleTransferirItem(itemId, recursoId)}
-                                            className="mt-auto"
-                                          >
-                                            Confirmar
-                                          </Button>
-                                        </div>
-                                      </DialogContent>
-                                    </Dialog>
                                   </div>
-                                </li>
-                              )
-                            })}
+                                  <Dialog>
+                                    <DialogTrigger asChild>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="ml-4"
+                                        aria-label={`Transferir ${item.nome}`}
+                                      >
+                                        <ArrowRightLeft className="h-4 w-4 mr-2" />
+                                        Transferir
+                                      </Button>
+                                    </DialogTrigger>
+                                    <DialogContent>
+                                      <DialogHeader>
+                                        <DialogTitle>Transferir Item</DialogTitle>
+                                        <DialogDescription>
+                                          Transferir {item.nome} de {recurso.nome}
+                                        </DialogDescription>
+                                      </DialogHeader>
+                                      <div className="flex items-center gap-4">
+                                        <div className="flex-1">
+                                          <Label>Quantidade</Label>
+                                          <Input
+                                            type="number"
+                                            max={itemDados.quantidade}
+                                            value={quantidadeTransferencia[`${itemId}-${recursoId}`] || ""}
+                                            onChange={(e) =>
+                                              setQuantidadeTransferencia((prev) => ({
+                                                ...prev,
+                                                [`${itemId}-${recursoId}`]: Number(e.target.value),
+                                              }))
+                                            }
+                                          />
+                                        </div>
+                                        <div className="flex-1">
+                                          <Label>Destino</Label>
+                                          <Select
+                                            value={recursoDestino[`${itemId}-${recursoId}`] || ""}
+                                            onValueChange={(value) =>
+                                              setRecursoDestino((prev) => ({
+                                                ...prev,
+                                                [`${itemId}-${recursoId}`]: value,
+                                              }))
+                                            }
+                                          >
+                                            <SelectTrigger>
+                                              <SelectValue placeholder="Selecione" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                              {recursosSelecionados
+                                                .filter((id) => id !== recursoId && item.recursosElegiveis.includes(id))
+                                                .map((id) => (
+                                                  <SelectItem key={id} value={id}>
+                                                    {RECURSOS_PREDEFINIDOS.find((r) => r.id === id)?.nome}
+                                                  </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                          </Select>
+                                        </div>
+                                        <Button
+                                          onClick={() => handleTransferirItem(itemId, recursoId)}
+                                          className="mt-auto"
+                                        >
+                                          Confirmar
+                                        </Button>
+                                      </div>
+                                    </DialogContent>
+                                  </Dialog>
+                                </div>
+                              </li>
+                            )
+                          })}
                         </ul>
                       </AccordionContent>
                     </AccordionItem>
@@ -455,10 +478,10 @@ export default function DivisaoPedidos() {
             </ScrollArea>
           </CardContent>
         </Card>
-      )}
-      {!(divisaoResultado && Object.keys(divisaoResultado).length > 0) && (
+      ) : (
         <p className="text-center text-gray-600">Nenhum item para exibir no resultado da divisão.</p>
       )}
+
       {/* Debug section */}
       {process.env.NODE_ENV === "development" && (
         <div className="mt-8 p-4 bg-gray-100 rounded-lg">
