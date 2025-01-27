@@ -58,7 +58,6 @@ export function useDivisaoPedidos() {
   const [recursosSelecionados, setRecursosSelecionados] = useState<string[]>([])
   const [divisaoResultado, setDivisaoResultado] = useState<DivisaoResultado | null>(null)
 
-  // Carregar contratos e itens do Supabase
   const carregarContratos = useCallback(async () => {
     try {
       const { data: contratosData, error: contratosError } = await supabase.from("contratos").select("*")
@@ -245,7 +244,6 @@ export function useDivisaoPedidos() {
     const item = contratoSelecionado.itens.find((i) => i.id === itemId)
     if (!item) return
 
-    // Verificar se o item existe no recurso de origem e se há quantidade suficiente
     if (
       !novoResultado[recursoOrigemId]?.itens[itemId] ||
       novoResultado[recursoOrigemId].itens[itemId].quantidade < quantidade
@@ -253,11 +251,9 @@ export function useDivisaoPedidos() {
       return
     }
 
-    // Converter valores para números e fixar precisão
     const valorUnitario = Number(item.valorUnitario)
     const valorTransferencia = Number((quantidade * valorUnitario).toFixed(2))
 
-    // Atualizar recurso de origem
     const quantidadeRestanteOrigem = novoResultado[recursoOrigemId].itens[itemId].quantidade - quantidade
 
     if (quantidadeRestanteOrigem > 0) {
@@ -269,12 +265,10 @@ export function useDivisaoPedidos() {
       delete novoResultado[recursoOrigemId].itens[itemId]
     }
 
-    // Atualizar o valor total do recurso de origem
     novoResultado[recursoOrigemId].valorTotal = Number(
       (novoResultado[recursoOrigemId].valorTotal - valorTransferencia).toFixed(2),
     )
 
-    // Inicializar ou atualizar o item no recurso de destino
     if (!novoResultado[recursoDestinoId].itens[itemId]) {
       novoResultado[recursoDestinoId].itens[itemId] = {
         quantidade: 0,
@@ -287,7 +281,6 @@ export function useDivisaoPedidos() {
       (novoResultado[recursoDestinoId].itens[itemId].quantidade * valorUnitario).toFixed(2),
     )
 
-    // Atualizar o valor total do recurso de destino
     novoResultado[recursoDestinoId].valorTotal = Number(
       (novoResultado[recursoDestinoId].valorTotal + valorTransferencia).toFixed(2),
     )
