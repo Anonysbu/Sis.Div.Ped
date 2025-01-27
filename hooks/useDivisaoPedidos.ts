@@ -395,32 +395,32 @@ export function useDivisaoPedidos() {
 
       // Preparar os dados com todas as informações solicitadas
       const dadosRecurso = Object.entries(dados.itens).map(([itemId, itemDados], index) => ({
-        "#": index + 1,
-        Item: itemDados.nome,
-        Unidade: itemDados.unidade,
-        Quantidade: itemDados.quantidade,
-        "Valor Unitário": itemDados.valorUnitario,
-        "Valor Total": itemDados.valorTotal,
+        ITEM: index + 1,
+        "ITEM DESCRIÇÃO": itemDados.nome,
+        UNIDADE: itemDados.unidade,
+        QUANTIDADE: itemDados.quantidade,
+        "VALOR UNI.": itemDados.valorUnitario,
+        "VALOR TOTAL": itemDados.valorTotal,
       }))
 
       // Adicionar linha em branco antes do total
       dadosRecurso.push({
-        "#": "",
-        Item: "",
-        Unidade: "",
-        Quantidade: "",
-        "Valor Unitário": "",
-        "Valor Total": "",
+        ITEM: "",
+        "ITEM DESCRIÇÃO": "",
+        UNIDADE: "",
+        QUANTIDADE: "",
+        "VALOR UNI.": "",
+        "VALOR TOTAL": "",
       })
 
       // Adicionar linha de total
       dadosRecurso.push({
-        "#": "",
-        Item: "TOTAL",
-        Unidade: "",
-        Quantidade: "",
-        "Valor Unitário": "",
-        "Valor Total": dados.valorTotal,
+        ITEM: "",
+        "ITEM DESCRIÇÃO": "TOTAL",
+        UNIDADE: "",
+        QUANTIDADE: "",
+        "VALOR UNI.": "",
+        "VALOR TOTAL": dados.valorTotal,
       })
 
       // Criar e formatar a planilha
@@ -446,7 +446,6 @@ export function useDivisaoPedidos() {
           if (R === 0) {
             ws[cell_ref].s = {
               font: { bold: true, color: { rgb: "000000" } },
-              fill: { fgColor: { rgb: "E2EFD9" } },
               alignment: { horizontal: "center", vertical: "center", wrapText: true },
               border: {
                 top: { style: "medium", color: { rgb: "000000" } },
@@ -460,7 +459,6 @@ export function useDivisaoPedidos() {
           else {
             ws[cell_ref].s = {
               font: { color: { rgb: "000000" } },
-              fill: { fgColor: { rgb: "FFFFFF" } },
               alignment: { horizontal: "center", vertical: "center", wrapText: true },
               border: {
                 top: { style: "thin", color: { rgb: "000000" } },
@@ -476,7 +474,6 @@ export function useDivisaoPedidos() {
             ws[cell_ref].s = {
               ...ws[cell_ref].s,
               font: { bold: true, color: { rgb: "000000" } },
-              fill: { fgColor: { rgb: "C6E0B4" } },
             }
           }
 
