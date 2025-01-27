@@ -448,6 +448,9 @@ export function useDivisaoPedidos() {
       { wch: 17 },
     ];
   
+    // Adicionar estilos à planilha "TOTAL"
+    applyStyles(wsTotal);
+  
     XLSX.utils.book_append_sheet(wb, wsTotal, "TOTAL");
   
     // Criar uma planilha para cada recurso
@@ -484,10 +487,8 @@ export function useDivisaoPedidos() {
         "VALOR TOTAL": dados.valorTotal,
       });
   
-      // Criar e formatar a planilha
       const ws = XLSX.utils.json_to_sheet(dadosRecurso);
   
-      // Ajustar largura das colunas
       ws["!cols"] = [
         { wch: 5 },
         { wch: 30 },
@@ -497,7 +498,9 @@ export function useDivisaoPedidos() {
         { wch: 17 },
       ];
   
-      // Adicionar a planilha ao workbook
+      // Adicionar estilos à planilha do recurso
+      applyStyles(ws);
+  
       XLSX.utils.book_append_sheet(wb, ws, recursoNome || recursoId);
     });
   
@@ -506,7 +509,46 @@ export function useDivisaoPedidos() {
     const nomeArquivo = `PEDIDOS ${contratoSelecionado.nome.toUpperCase()} - ${mesReferencia} - CONFERIR.xlsx`;
   
     // Exportar o arquivo
-    XLSX.writeFile(wb, nomeArquivo)
+    XLSX.writeFile(wb, nomeArquivo);
+  };
+  
+  // Função para aplicar estilos (borda e alinhamento)
+  const applyStyles = (worksheet) => {
+    const range = XLSX.utils.decode_range(worksheet["!ref"]);
+  
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = range.s.c; C <= range.e.c; ++C) {
+        const cell_address = { r: R, c: C };
+        const cell_ref = XLSX.utils.encode_cell(cell_address);
+  
+        if (!worksheet[cell_ref]) continue;
+  
+        // Primeira linha (cabeçalho) em negrito e centralizado
+        if (R === 0) {
+          worksheet[cell_ref].s = {
+            font: { bold: true },
+            alignment: { horizontal: "center", vertical: "center" },
+            border: {
+              top: { style: "thin" },
+              bottom: { style: "thin" },
+              left: { style: "thin" },
+              right: { style: "thin" },
+            },
+          };
+        } else {
+          // Linhas normais com borda
+          worksheet[cell_ref].s = {
+            alignment: { horizontal: "center", vertical: "center" },
+            border: {
+              top: { style: "thin" },
+              bottom: { style: "thin" },
+              left: { style: "thin" },
+              right: { style: "thin" },
+            },
+          };
+        }
+      }
+    }
   }
 
   return {
