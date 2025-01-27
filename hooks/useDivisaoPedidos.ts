@@ -174,6 +174,12 @@ export function useDivisaoPedidos() {
       return
     }
 
+    console.log("Calculando divisão para:", {
+      contratoSelecionado,
+      itensPedido,
+      recursosSelecionados,
+    })
+
     const itensComQuantidade = itensPedido.filter((ip) => ip.quantidade > 0)
     if (itensComQuantidade.length === 0 || recursosSelecionados.length === 0) {
       console.log("Sem itens com quantidade ou recursos selecionados")
@@ -192,11 +198,23 @@ export function useDivisaoPedidos() {
 
     itensComQuantidade.forEach((ip) => {
       const item = contratoSelecionado.itens.find((i) => i.id === ip.itemId)
-      if (!item) return
+      if (!item) {
+        console.log("Item não encontrado:", ip.itemId)
+        return
+      }
+
+      console.log("Processando item:", {
+        item,
+        quantidade: ip.quantidade,
+        recursosElegiveis: item.recursosElegiveis,
+      })
 
       const recursosElegiveis = recursosSelecionados.filter((recursoId) => item.recursosElegiveis.includes(recursoId))
 
-      if (recursosElegiveis.length === 0) return
+      if (recursosElegiveis.length === 0) {
+        console.log("Nenhum recurso elegível selecionado para o item:", item.nome)
+        return
+      }
 
       const quantidadePorRecurso = Math.floor(ip.quantidade / recursosElegiveis.length)
       let restante = ip.quantidade % recursosElegiveis.length
@@ -320,6 +338,10 @@ export function useDivisaoPedidos() {
     a.click()
     window.URL.revokeObjectURL(url)
   }
+
+  useEffect(() => {
+    console.log("Estado atualizado - divisaoResultado:", divisaoResultado)
+  }, [divisaoResultado])
 
   return {
     contratos,

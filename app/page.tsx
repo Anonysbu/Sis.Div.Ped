@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { useDivisaoPedidos } from "../hooks/useDivisaoPedidos"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -107,6 +107,10 @@ export default function DivisaoPedidos() {
       recursosElegiveis: !todosRecursosElegiveis ? RECURSOS_PREDEFINIDOS.map((r) => r.id) : [],
     }))
   }, [todosRecursosElegiveis, RECURSOS_PREDEFINIDOS])
+
+  useEffect(() => {
+    console.log("Estado do divisaoResultado na renderização:", divisaoResultado)
+  }, [divisaoResultado])
 
   return (
     <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
@@ -324,12 +328,9 @@ export default function DivisaoPedidos() {
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[400px]">
-              {recursosSelecionados.map((recursoId) => {
-                const dados = divisaoResultado[recursoId]
-                if (!dados || Object.keys(dados.itens).length === 0) return null
-
+              {Object.entries(divisaoResultado).map(([recursoId, dados]) => {
                 const recurso = RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)
-                if (!recurso) return null
+                if (!recurso || !dados || Object.keys(dados.itens).length === 0) return null
 
                 return (
                   <Accordion type="single" collapsible className="mb-4" key={recursoId}>
