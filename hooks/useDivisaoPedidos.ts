@@ -316,46 +316,43 @@ export function useDivisaoPedidos() {
         }
 
         const novoResultado = JSON.parse(JSON.stringify(prevDivisao))
-        const item = contratoSelecionado.itens.find((i) => i.id === itemId)
 
-        if (!item) {
-          console.error("Item não encontrado:", itemId)
+        // Verificar se o item existe no recurso de origem
+        if (!novoResultado[recursoOrigemId]?.itens[itemId]) {
+          console.error("Item não encontrado no recurso de origem:", itemId)
           return prevDivisao
         }
 
-        // Verificar se o item existe no recurso de origem e tem quantidade suficiente
-        if (
-          !novoResultado[recursoOrigemId]?.itens[itemId] ||
-          novoResultado[recursoOrigemId].itens[itemId].quantidade < quantidade
-        ) {
-          console.error("Quantidade inválida para transferência")
+        const itemOrigem = novoResultado[recursoOrigemId].itens[itemId]
+
+        // Verificar quantidade disponível
+        if (itemOrigem.quantidade < quantidade) {
+          console.error("Quantidade insuficiente para transferência")
           return prevDivisao
         }
 
-        // Verificar se o recurso de destino é elegível para o item
-        if (!item.recursosElegiveis.includes(recursoDestinoId)) {
+        // Verificar elegibilidade do recurso de destino
+        if (!itemOrigem.recursosElegiveis.includes(recursoDestinoId)) {
           console.error("Recurso de destino não é elegível para este item")
           return prevDivisao
         }
 
-        const valorUnitario = item.valorUnitario
+        const valorUnitario = itemOrigem.valorUnitario
         const valorTransferencia = Number((quantidade * valorUnitario).toFixed(2))
 
         // Atualizar recurso de origem
-        novoResultado[recursoOrigemId].itens[itemId].quantidade -= quantidade
-        novoResultado[recursoOrigemId].itens[itemId].valorTotal = Number(
-          (novoResultado[recursoOrigemId].itens[itemId].quantidade * valorUnitario).toFixed(2),
-        )
+        itemOrigem.quantidade -= quantidade
+        itemOrigem.valorTotal = Number((itemOrigem.quantidade * valorUnitario).toFixed(2))
         novoResultado[recursoOrigemId].valorTotal = Number(
           (novoResultado[recursoOrigemId].valorTotal - valorTransferencia).toFixed(2),
         )
 
         // Remover o item se a quantidade chegou a zero
-        if (novoResultado[recursoOrigemId].itens[itemId].quantidade === 0) {
+        if (itemOrigem.quantidade === 0) {
           delete novoResultado[recursoOrigemId].itens[itemId]
         }
 
-        // Atualizar recurso de destino
+        // Inicializar recurso de destino se necessário
         if (!novoResultado[recursoDestinoId]) {
           novoResultado[recursoDestinoId] = {
             itens: {},
@@ -363,14 +360,12 @@ export function useDivisaoPedidos() {
           }
         }
 
+        // Atualizar recurso de destino
         if (!novoResultado[recursoDestinoId].itens[itemId]) {
           novoResultado[recursoDestinoId].itens[itemId] = {
+            ...itemOrigem,
             quantidade: 0,
             valorTotal: 0,
-            nome: item.nome,
-            unidade: item.unidade,
-            valorUnitario: item.valorUnitario,
-            recursosElegiveis: item.recursosElegiveis,
           }
         }
 

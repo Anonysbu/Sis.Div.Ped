@@ -68,15 +68,17 @@ export default function DivisaoPedidos() {
 
   const handleTransferirItem = useCallback(
     (itemId: string, recursoOrigemId: string) => {
-      const quantidade = quantidadeTransferencia[`${itemId}-${recursoOrigemId}`] || 0
+      const quantidade = Number(quantidadeTransferencia[`${itemId}-${recursoOrigemId}`]) || 0
       const destino = recursoDestino[`${itemId}-${recursoOrigemId}`]
+
+      console.log("Tentando transferir:", {
+        itemId,
+        quantidade,
+        origem: recursoOrigemId,
+        destino,
+      })
+
       if (destino && quantidade > 0) {
-        console.log("Transferindo:", {
-          itemId,
-          quantidade,
-          origem: recursoOrigemId,
-          destino,
-        })
         transferirItem(itemId, quantidade, recursoOrigemId, destino)
         // Reset the transfer form
         setQuantidadeTransferencia((prev) => ({ ...prev, [`${itemId}-${recursoOrigemId}`]: 0 }))
