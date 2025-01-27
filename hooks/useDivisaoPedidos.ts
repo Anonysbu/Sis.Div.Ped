@@ -394,7 +394,8 @@ export function useDivisaoPedidos() {
       const recursoNome = RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)?.nome
 
       // Preparar os dados com todas as informações solicitadas
-      const dadosRecurso = Object.entries(dados.itens).map(([itemId, itemDados]) => ({
+      const dadosRecurso = Object.entries(dados.itens).map(([itemId, itemDados], index) => ({
+        "#": index + 1,
         Item: itemDados.nome,
         Unidade: itemDados.unidade,
         Quantidade: itemDados.quantidade,
@@ -402,8 +403,19 @@ export function useDivisaoPedidos() {
         "Valor Total": itemDados.valorTotal,
       }))
 
+      // Adicionar linha em branco antes do total
+      dadosRecurso.push({
+        "#": "",
+        Item: "",
+        Unidade: "",
+        Quantidade: "",
+        "Valor Unitário": "",
+        "Valor Total": "",
+      })
+
       // Adicionar linha de total
       dadosRecurso.push({
+        "#": "",
         Item: "TOTAL",
         Unidade: "",
         Quantidade: "",
@@ -415,8 +427,8 @@ export function useDivisaoPedidos() {
       const ws = XLSX.utils.json_to_sheet(dadosRecurso)
 
       // Ajustar largura das colunas
-      const colunas = ["A", "B", "C", "D", "E"]
-      const larguras = [40, 15, 15, 20, 20]
+      const colunas = ["A", "B", "C", "D", "E", "F"]
+      const larguras = [5, 40, 15, 15, 20, 20]
       ws["!cols"] = larguras.map((w) => ({ wch: w }))
 
       // Adicionar estilos
@@ -465,7 +477,7 @@ export function useDivisaoPedidos() {
           }
 
           // Formatar células de valor como moeda
-          if (C === 3 || C === 4) {
+          if (C === 4 || C === 5) {
             ws[cell_ref].z = '"R$"#,##0.00'
           }
         }

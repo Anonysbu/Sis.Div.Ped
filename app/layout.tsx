@@ -8,7 +8,10 @@ export const metadata: Metadata = {
   title: "Sistema de Divisão de Pedidos",
   description: "Aplicativo para divisão de pedidos entre recursos",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+    ],
   },
 }
 

@@ -283,7 +283,7 @@ export default function DivisaoPedidos() {
 
       <Dialog>
         <DialogTrigger asChild>
-          <Button className="mb-6 w-full max-w-md mx-auto block">
+          <Button className="mb-6 w-full max-w-md mx-auto block bg-blue-600 hover:bg-blue-700 text-white">
             <PlusCircle className="h-5 w-5 mr-2" />
             Adicionar Novo Contrato
           </Button>
