@@ -228,9 +228,9 @@ export function useDivisaoPedidos() {
       const quantidadeTotal = ip.quantidade
       let quantidadeRestante = quantidadeTotal
 
-      // Distribuir 70% para recursos prioritários, se houver
+      // Distribuir 60% para recursos prioritários, se houver
       if (recursosPrioritarios.length > 0) {
-        const quantidadePrioritaria = Math.floor(quantidadeTotal * 0.7)
+        const quantidadePrioritaria = Math.floor(quantidadeTotal * 0.6)
         const quantidadePorRecursoPrioritario = Math.floor(quantidadePrioritaria / recursosPrioritarios.length)
         let restantePrioritario = quantidadePrioritaria % recursosPrioritarios.length
 
@@ -385,14 +385,14 @@ export function useDivisaoPedidos() {
   )
 
   const exportarParaPlanilha = () => {
-    if (!divisaoResultado || !contratoSelecionado) return
-
-    const wb = XLSX.utils.book_new()
-
+    if (!divisaoResultado || !contratoSelecionado) return;
+  
+    const wb = XLSX.utils.book_new();
+  
     // Criar uma planilha para cada recurso
     Object.entries(divisaoResultado).forEach(([recursoId, dados]) => {
-      const recursoNome = RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)?.nome
-
+      const recursoNome = RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)?.nome;
+  
       // Preparar os dados com todas as informações solicitadas
       const dadosRecurso = Object.entries(dados.itens).map(([itemId, itemDados], index) => ({
         ITEM: index + 1,
@@ -401,8 +401,8 @@ export function useDivisaoPedidos() {
         QUANTIDADE: itemDados.quantidade,
         "VALOR UNI.": itemDados.valorUnitario,
         "VALOR TOTAL": itemDados.valorTotal,
-      }))
-
+      }));
+  
       // Adicionar linha em branco antes do total
       dadosRecurso.push({
         ITEM: "",
@@ -411,8 +411,8 @@ export function useDivisaoPedidos() {
         QUANTIDADE: "",
         "VALOR UNI.": "",
         "VALOR TOTAL": "",
-      })
-
+      });
+  
       // Adicionar linha de total
       dadosRecurso.push({
         ITEM: "",
@@ -421,82 +421,80 @@ export function useDivisaoPedidos() {
         QUANTIDADE: "",
         "VALOR UNI.": "",
         "VALOR TOTAL": dados.valorTotal,
-      })
-
+      });
+  
       // Criar e formatar a planilha
-      const ws = XLSX.utils.json_to_sheet(dadosRecurso)
-
-// Configurar a mesclagem de células
-ws["!merges"] = [
-  { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }, // Mesclar A1:B1
-  { s: { r: 3, c: 1 }, e: { r: 3, c: 4 } }  // Mesclar B4:E4
-];
-
-
-
+      const ws = XLSX.utils.json_to_sheet(dadosRecurso);
+  
       // Ajustar largura das colunas
-      const colunas = ["A", "B", "C", "D", "E", "F"]
-      const larguras = [5, 30, 12, 12, 17, 17]
-      ws["!cols"] = larguras.map((w) => ({ wch: w }))
-
-      // Adicionar estilos
-      const range = XLSX.utils.decode_range(ws["!ref"]!)
-      for (let R = range.s.r; R <= range.e.r; ++R) {
-        for (let C = range.s.c; C <= range.e.c; ++C) {
-          const cell_address = { c: C, r: R }
-          const cell_ref = XLSX.utils.encode_cell(cell_address)
-          if (!ws[cell_ref]) continue
-
-          // Estilo para cabeçalho
-          if (R === 0) {
-            ws[cell_ref].s = {
-              font: { bold: true, color: { rgb: "000000" } },
-              alignment: { horizontal: "center", vertical: "center", wrapText: true },
-              border: {
-                top: { style: "medium", color: { rgb: "000000" } },
-                bottom: { style: "medium", color: { rgb: "000000" } },
-                left: { style: "medium", color: { rgb: "000000" } },
-                right: { style: "medium", color: { rgb: "000000" } },
-              },
-            }
-          }
-          // Estilo para células normais
-          else {
-            ws[cell_ref].s = {
-              font: { color: { rgb: "000000" } },
-              alignment: { horizontal: C === 0 ? "center" : "left", vertical: "center", wrapText: true },
-              border: {
-                top: { style: "thin", color: { rgb: "000000" } },
-                bottom: { style: "thin", color: { rgb: "000000" } },
-                left: { style: "thin", color: { rgb: "000000" } },
-                right: { style: "thin", color: { rgb: "000000" } },
-              },
-            }
-          }
-
-          // Estilo para linha de total
-          if (R === 0) {
-            ws[cell_ref].s = {
-              font: { bold: true }, // Texto em negrito
-              alignment: { horizontal: "center", vertical: "center" }, // Alinhamento centralizado
-            }
-          }
-
-          // Formatar células de valor como moeda
-          if (C === 4 || C === 5) {
-            ws[cell_ref].z = '"R$"#,##0.00'
-          }
-        }
-      }
-
+      ws["!cols"] = [
+        { wch: 5 },
+        { wch: 30 },
+        { wch: 12 },
+        { wch: 12 },
+        { wch: 17 },
+        { wch: 17 },
+      ];
+  
       // Adicionar a planilha ao workbook
-      XLSX.utils.book_append_sheet(wb, ws, recursoNome || recursoId)
-    })
-
+      XLSX.utils.book_append_sheet(wb, ws, recursoNome || recursoId);
+    });
+  
+    // Criar uma planilha consolidada "TOTAL"
+    const totalDados = [];
+    let totalGeral = 0;
+  
+    Object.entries(divisaoResultado).forEach(([recursoId, dados]) => {
+      Object.entries(dados.itens).forEach(([itemId, itemDados]) => {
+        totalDados.push({
+          ITEM: totalDados.length + 1,
+          "ITEM DESCRIÇÃO": itemDados.nome,
+          UNIDADE: itemDados.unidade,
+          QUANTIDADE: itemDados.quantidade,
+          "VALOR UNI.": itemDados.valorUnitario,
+          "VALOR TOTAL": itemDados.valorTotal,
+        });
+        totalGeral += itemDados.valorTotal;
+      });
+    });
+  
+    // Adicionar linha em branco antes do total geral
+    totalDados.push({
+      ITEM: "",
+      "ITEM DESCRIÇÃO": "",
+      UNIDADE: "",
+      QUANTIDADE: "",
+      "VALOR UNI.": "",
+      "VALOR TOTAL": "",
+    });
+  
+    // Adicionar linha de total geral
+    totalDados.push({
+      ITEM: "",
+      "ITEM DESCRIÇÃO": "TOTAL GERAL",
+      UNIDADE: "",
+      QUANTIDADE: "",
+      "VALOR UNI.": "",
+      "VALOR TOTAL": totalGeral,
+    });
+  
+    const wsTotal = XLSX.utils.json_to_sheet(totalDados);
+  
+    wsTotal["!cols"] = [
+      { wch: 5 },
+      { wch: 30 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 17 },
+      { wch: 17 },
+    ];
+  
+    XLSX.utils.book_append_sheet(wb, wsTotal, "TOTAL");
+  
     // Gerar nome do arquivo com mês e ano
-    const mesReferencia = new Date().toLocaleString("pt-BR", { month: "long", year: "numeric" }).toUpperCase()
-    const nomeArquivo = `PEDIDOS ${contratoSelecionado.nome.toUpperCase()} - ${mesReferencia} - CONFERIR.xlsx`
-
+    const mesReferencia = new Date().toLocaleString("pt-BR", { month: "long", year: "numeric" }).toUpperCase();
+    const nomeArquivo = `PEDIDOS ${contratoSelecionado.nome.toUpperCase()} - ${mesReferencia} - CONFERIR.xlsx`;
+  
     // Exportar o arquivo
     XLSX.writeFile(wb, nomeArquivo)
   }
