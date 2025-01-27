@@ -389,11 +389,72 @@ export function useDivisaoPedidos() {
   
     const wb = XLSX.utils.book_new();
   
+    // Criar uma planilha consolidada "TOTAL"
+    const totalItens = {};
+    let totalGeral = 0;
+  
+    Object.entries(divisaoResultado).forEach(([recursoId, dados]) => {
+      Object.entries(dados.itens).forEach(([itemId, itemDados]) => {
+        const key = `${itemDados.nome}-${itemDados.unidade}-${itemDados.valorUnitario}`;
+        if (!totalItens[key]) {
+          totalItens[key] = {
+            ITEM: Object.keys(totalItens).length + 1,
+            "ITEM DESCRIÇÃO": itemDados.nome,
+            UNIDADE: itemDados.unidade,
+            QUANTIDADE: 0,
+            "VALOR UNI.": itemDados.valorUnitario,
+            "VALOR TOTAL": 0,
+          };
+        }
+  
+        totalItens[key].QUANTIDADE += itemDados.quantidade;
+        totalItens[key]["VALOR TOTAL"] = Number(
+          (totalItens[key].QUANTIDADE * totalItens[key]["VALOR UNI."]).toFixed(2)
+        );
+        totalGeral += itemDados.valorTotal;
+      });
+    });
+  
+    const totalDados = Object.values(totalItens);
+  
+    // Adicionar linha em branco antes do total geral
+    totalDados.push({
+      ITEM: "",
+      "ITEM DESCRIÇÃO": "",
+      UNIDADE: "",
+      QUANTIDADE: "",
+      "VALOR UNI.": "",
+      "VALOR TOTAL": "",
+    });
+  
+    // Adicionar linha de total geral
+    totalDados.push({
+      ITEM: "",
+      "ITEM DESCRIÇÃO": "TOTAL GERAL",
+      UNIDADE: "",
+      QUANTIDADE: "",
+      "VALOR UNI.": "",
+      "VALOR TOTAL": totalGeral,
+    });
+  
+    const wsTotal = XLSX.utils.json_to_sheet(totalDados);
+  
+    wsTotal["!cols"] = [
+      { wch: 5 },
+      { wch: 30 },
+      { wch: 12 },
+      { wch: 12 },
+      { wch: 17 },
+      { wch: 17 },
+    ];
+  
+    XLSX.utils.book_append_sheet(wb, wsTotal, "TOTAL");
+  
     // Criar uma planilha para cada recurso
     Object.entries(divisaoResultado).forEach(([recursoId, dados]) => {
       const recursoNome = RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)?.nome;
   
-      // Preparar os dados com todas as informações solicitadas
+      // Preparar os dados para a planilha do recurso
       const dadosRecurso = Object.entries(dados.itens).map(([itemId, itemDados], index) => ({
         ITEM: index + 1,
         "ITEM DESCRIÇÃO": itemDados.nome,
@@ -439,57 +500,6 @@ export function useDivisaoPedidos() {
       // Adicionar a planilha ao workbook
       XLSX.utils.book_append_sheet(wb, ws, recursoNome || recursoId);
     });
-  
-    // Criar uma planilha consolidada "TOTAL"
-    const totalDados = [];
-    let totalGeral = 0;
-  
-    Object.entries(divisaoResultado).forEach(([recursoId, dados]) => {
-      Object.entries(dados.itens).forEach(([itemId, itemDados]) => {
-        totalDados.push({
-          ITEM: totalDados.length + 1,
-          "ITEM DESCRIÇÃO": itemDados.nome,
-          UNIDADE: itemDados.unidade,
-          QUANTIDADE: itemDados.quantidade,
-          "VALOR UNI.": itemDados.valorUnitario,
-          "VALOR TOTAL": itemDados.valorTotal,
-        });
-        totalGeral += itemDados.valorTotal;
-      });
-    });
-  
-    // Adicionar linha em branco antes do total geral
-    totalDados.push({
-      ITEM: "",
-      "ITEM DESCRIÇÃO": "",
-      UNIDADE: "",
-      QUANTIDADE: "",
-      "VALOR UNI.": "",
-      "VALOR TOTAL": "",
-    });
-  
-    // Adicionar linha de total geral
-    totalDados.push({
-      ITEM: "",
-      "ITEM DESCRIÇÃO": "TOTAL GERAL",
-      UNIDADE: "",
-      QUANTIDADE: "",
-      "VALOR UNI.": "",
-      "VALOR TOTAL": totalGeral,
-    });
-  
-    const wsTotal = XLSX.utils.json_to_sheet(totalDados);
-  
-    wsTotal["!cols"] = [
-      { wch: 5 },
-      { wch: 30 },
-      { wch: 12 },
-      { wch: 12 },
-      { wch: 17 },
-      { wch: 17 },
-    ];
-  
-    XLSX.utils.book_append_sheet(wb, wsTotal, "TOTAL");
   
     // Gerar nome do arquivo com mês e ano
     const mesReferencia = new Date().toLocaleString("pt-BR", { month: "long", year: "numeric" }).toUpperCase();
