@@ -416,7 +416,7 @@ export function useDivisaoPedidos() {
 
       // Ajustar largura das colunas
       const colunas = ["A", "B", "C", "D", "E"]
-      const larguras = [30, 15, 15, 20, 20]
+      const larguras = [40, 15, 15, 20, 20]
       ws["!cols"] = larguras.map((w) => ({ wch: w }))
 
       // Adicionar estilos
@@ -431,15 +431,21 @@ export function useDivisaoPedidos() {
           if (R === 0) {
             ws[cell_ref].s = {
               font: { bold: true, color: { rgb: "FFFFFF" } },
-              fill: { fgColor: { rgb: "4F81BD" } },
-              alignment: { horizontal: "center", vertical: "center" },
+              fill: { fgColor: { rgb: "4472C4" } },
+              alignment: { horizontal: "center", vertical: "center", wrapText: true },
+              border: {
+                top: { style: "medium", color: { rgb: "000000" } },
+                bottom: { style: "medium", color: { rgb: "000000" } },
+                left: { style: "medium", color: { rgb: "000000" } },
+                right: { style: "medium", color: { rgb: "000000" } },
+              },
             }
           }
           // Estilo para células normais
           else {
             ws[cell_ref].s = {
               font: { color: { rgb: "000000" } },
-              alignment: { horizontal: "center", vertical: "center" },
+              alignment: { horizontal: "center", vertical: "center", wrapText: true },
               border: {
                 top: { style: "thin", color: { rgb: "000000" } },
                 bottom: { style: "thin", color: { rgb: "000000" } },
@@ -454,7 +460,7 @@ export function useDivisaoPedidos() {
             ws[cell_ref].s = {
               ...ws[cell_ref].s,
               font: { bold: true, color: { rgb: "000000" } },
-              fill: { fgColor: { rgb: "E0E0E0" } },
+              fill: { fgColor: { rgb: "D9D9D9" } },
             }
           }
 

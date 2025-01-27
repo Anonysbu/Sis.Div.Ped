@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Download, ArrowRightLeft, Trash2, PlusCircle, FileSpreadsheet } from "lucide-react"
+import { Download, ArrowRightLeft, Trash2, PlusCircle, FileSpreadsheet, Calculator } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import {
   Dialog,
@@ -268,8 +268,8 @@ export default function DivisaoPedidos() {
   return (
     <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
       <div className="flex items-center justify-center mb-6">
-        <FileSpreadsheet className="h-10 w-10 text-blue-600 mr-4" />
-        <h1 className="text-4xl font-bold text-center text-blue-600 bg-white px-6 py-2 rounded-lg shadow-md">
+        <Calculator className="h-10 w-10 text-blue-600 mr-4" />
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-600 bg-white px-4 py-2 rounded-lg shadow-md">
           Sistema de Divisão de Pedidos
         </h1>
       </div>
@@ -283,17 +283,17 @@ export default function DivisaoPedidos() {
 
       <Dialog>
         <DialogTrigger asChild>
-          <Button className="mb-6 w-full">
+          <Button className="mb-6 w-full max-w-md mx-auto block">
             <PlusCircle className="h-5 w-5 mr-2" />
             Adicionar Novo Contrato
           </Button>
         </DialogTrigger>
-        <DialogContent className="max-w-3xl">
+        <DialogContent className="max-w-3xl w-[95vw]">
           <DialogHeader>
             <DialogTitle>Adicionar Novo Contrato</DialogTitle>
           </DialogHeader>
           <Card className="bg-white">
-            <CardContent className="space-y-4 p-4">
+            <CardContent className="space-y-4 p-4 max-h-[80vh] overflow-y-auto">
               <div>
                 <Label htmlFor="nomeContrato" className="text-sm font-medium text-gray-700">
                   Nome do Contrato
