@@ -389,37 +389,47 @@ export function useDivisaoPedidos() {
 
     const wb = XLSX.utils.book_new()
 
+    // Criar uma planilha para cada recurso
     Object.entries(divisaoResultado).forEach(([recursoId, dados]) => {
       const recursoNome = RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)?.nome
-      const dadosRecurso = Object.entries(dados.itens).map(([itemId, itemDados]) => {
-        const item = contratoSelecionado.itens.find((i) => i.id === itemId)
-        return {
-          Item: item?.nome,
-          Quantidade: itemDados.quantidade,
-          Unidade: item?.unidade,
-          "Valor Unitário": item?.valorUnitario.toFixed(2),
-          "Valor Total": itemDados.valorTotal.toFixed(2),
-        }
-      })
 
+      // Preparar os dados com todas as informações solicitadas
+      const dadosRecurso = Object.entries(dados.itens).map(([itemId, itemDados]) => ({
+        Item: itemDados.nome,
+        Unidade: itemDados.unidade,
+        Quantidade: itemDados.quantidade,
+        "Valor Unitário": `R$ ${itemDados.valorUnitario.toFixed(2)}`,
+        "Valor Total": `R$ ${itemDados.valorTotal.toFixed(2)}`,
+      }))
+
+      // Adicionar linha de total
       dadosRecurso.push({
         Item: "TOTAL",
-        Quantidade: "",
         Unidade: "",
+        Quantidade: "",
         "Valor Unitário": "",
-        "Valor Total": dados.valorTotal.toFixed(2),
+        "Valor Total": `R$ ${dados.valorTotal.toFixed(2)}`,
       })
 
+      // Criar e formatar a planilha
       const ws = XLSX.utils.json_to_sheet(dadosRecurso)
+
+      // Ajustar largura das colunas
+      const colunas = ["A", "B", "C", "D", "E"]
+      const larguras = [30, 15, 15, 20, 20]
+      ws["!cols"] = larguras.map((w) => ({ wch: w }))
+
+      // Adicionar a planilha ao workbook
       XLSX.utils.book_append_sheet(wb, ws, recursoNome || recursoId)
     })
 
+    // Gerar nome do arquivo com mês e ano
     const mesReferencia = new Date().toLocaleString("pt-BR", { month: "long", year: "numeric" }).toUpperCase()
     const nomeArquivo = `PEDIDOS ${contratoSelecionado.nome.toUpperCase()} - ${mesReferencia} - CONFERIR.xlsx`
 
+    // Exportar o arquivo
     const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" })
     const blob = new Blob([wbout], { type: "application/octet-stream" })
-
     const url = window.URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
