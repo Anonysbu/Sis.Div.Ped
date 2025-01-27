@@ -426,8 +426,12 @@ export function useDivisaoPedidos() {
       // Criar e formatar a planilha
       const ws = XLSX.utils.json_to_sheet(dadosRecurso)
 
-      // Mesclar células A1:B1
-      ws["!merges"] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }]
+      // Configurar as mesclagens de células
+      ws["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }, // Mesclar A1:B1
+        { s: { r: 3, c: 1 }, e: { r: 3, c: 4 } }  // Mesclar B4:E4
+      ];
+
 
       // Ajustar largura das colunas
       const colunas = ["A", "B", "C", "D", "E", "F"]
