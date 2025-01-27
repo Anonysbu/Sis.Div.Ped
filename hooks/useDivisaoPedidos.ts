@@ -449,6 +449,15 @@ export function useDivisaoPedidos() {
             }
           }
 
+          // Estilo para linha de total
+          if (R === range.e.r) {
+            ws[cell_ref].s = {
+              ...ws[cell_ref].s,
+              font: { bold: true, color: { rgb: "000000" } },
+              fill: { fgColor: { rgb: "E0E0E0" } },
+            }
+          }
+
           // Formatar células de valor como moeda
           if (C === 3 || C === 4) {
             ws[cell_ref].z = '"R$"#,##0.00'
@@ -465,14 +474,7 @@ export function useDivisaoPedidos() {
     const nomeArquivo = `PEDIDOS ${contratoSelecionado.nome.toUpperCase()} - ${mesReferencia} - CONFERIR.xlsx`
 
     // Exportar o arquivo
-    const wbout = XLSX.write(wb, { bookType: "xlsx", type: "array" })
-    const blob = new Blob([wbout], { type: "application/octet-stream" })
-    const url = window.URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = nomeArquivo
-    a.click()
-    window.URL.revokeObjectURL(url)
+    XLSX.writeFile(wb, nomeArquivo)
   }
 
   return {
