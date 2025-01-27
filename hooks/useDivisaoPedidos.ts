@@ -431,7 +431,7 @@ export function useDivisaoPedidos() {
 
       // Ajustar largura das colunas
       const colunas = ["A", "B", "C", "D", "E", "F"]
-      const larguras = [5, 30, 15, 15, 20, 20]
+      const larguras = [5, 35, 15, 15, 20, 20]
       ws["!cols"] = larguras.map((w) => ({ wch: w }))
 
       // Adicionar estilos
