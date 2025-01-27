@@ -426,12 +426,15 @@ export function useDivisaoPedidos() {
       // Criar e formatar a planilha
       const ws = XLSX.utils.json_to_sheet(dadosRecurso)
 
-      // Configurar as mesclagens de células
+      // Configurar a mesclagem de células
       ws["!merges"] = [
         { s: { r: 0, c: 0 }, e: { r: 0, c: 1 } }, // Mesclar A1:B1
         { s: { r: 3, c: 1 }, e: { r: 3, c: 4 } }  // Mesclar B4:E4
       ];
 
+      // Aplicar alinhamento ao centro mesmo sem valores
+      ws["A1"] = { s: { alignment: { horizontal: "center", vertical: "center" } } };
+      ws["B4"] = { s: { alignment: { horizontal: "center", vertical: "center" } } };
 
       // Ajustar largura das colunas
       const colunas = ["A", "B", "C", "D", "E", "F"]
