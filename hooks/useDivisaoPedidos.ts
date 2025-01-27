@@ -431,7 +431,7 @@ export function useDivisaoPedidos() {
 
       // Ajustar largura das colunas
       const colunas = ["A", "B", "C", "D", "E", "F"]
-      const larguras = [5, 40, 15, 15, 20, 20]
+      const larguras = [5, 30, 15, 15, 20, 20]
       ws["!cols"] = larguras.map((w) => ({ wch: w }))
 
       // Adicionar estilos
@@ -470,10 +470,10 @@ export function useDivisaoPedidos() {
           }
 
           // Estilo para linha de total
-          if (R === range.e.r) {
+          if (R === 0) {
             ws[cell_ref].s = {
-              ...ws[cell_ref].s,
-              font: { bold: true, color: { rgb: "000000" } },
+              font: { bold: true }, // Texto em negrito
+              alignment: { horizontal: "center", vertical: "center" }, // Alinhamento centralizado
             }
           }
 
