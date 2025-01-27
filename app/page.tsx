@@ -384,17 +384,15 @@ export default function DivisaoPedidos() {
                       <AccordionContent>
                         <ul className="space-y-2">
                           {Object.entries(dados.itens).map(([itemId, itemDados]) => {
-                            const item = contratoSelecionado?.itens.find((i) => i.id === itemId)
-                            if (!item) return null
-
+                            console.log(`Renderizando item ${itemId}:`, itemDados)
                             return (
                               <li key={itemId} className="p-2 border rounded">
                                 <div className="flex justify-between items-center">
                                   <div className="flex-1">
-                                    <span className="text-sm font-medium">{item.nome}</span>
+                                    <span className="text-sm font-medium">{itemDados.nome}</span>
                                     <div className="text-sm text-gray-600">
-                                      {itemDados.quantidade} {item.unidade} x R$ {item.valorUnitario.toFixed(2)} = R${" "}
-                                      {itemDados.valorTotal.toFixed(2)}
+                                      {itemDados.quantidade} {itemDados.unidade} x R${" "}
+                                      {itemDados.valorUnitario.toFixed(2)} = R$ {itemDados.valorTotal.toFixed(2)}
                                     </div>
                                   </div>
                                   <Dialog>
@@ -403,7 +401,7 @@ export default function DivisaoPedidos() {
                                         variant="outline"
                                         size="sm"
                                         className="ml-4"
-                                        aria-label={`Transferir ${item.nome}`}
+                                        aria-label={`Transferir ${itemDados.nome}`}
                                       >
                                         <ArrowRightLeft className="h-4 w-4 mr-2" />
                                         Transferir
@@ -413,7 +411,7 @@ export default function DivisaoPedidos() {
                                       <DialogHeader>
                                         <DialogTitle>Transferir Item</DialogTitle>
                                         <DialogDescription>
-                                          Transferir {item.nome} de {recurso.nome}
+                                          Transferir {itemDados.nome} de {recurso.nome}
                                         </DialogDescription>
                                       </DialogHeader>
                                       <div className="flex items-center gap-4">
@@ -447,7 +445,9 @@ export default function DivisaoPedidos() {
                                             </SelectTrigger>
                                             <SelectContent>
                                               {recursosSelecionados
-                                                .filter((id) => id !== recursoId && item.recursosElegiveis.includes(id))
+                                                .filter(
+                                                  (id) => id !== recursoId && itemDados.recursosElegiveis.includes(id),
+                                                )
                                                 .map((id) => (
                                                   <SelectItem key={id} value={id}>
                                                     {RECURSOS_PREDEFINIDOS.find((r) => r.id === id)?.nome}
@@ -476,6 +476,12 @@ export default function DivisaoPedidos() {
                 )
               })}
             </ScrollArea>
+            {process.env.NODE_ENV === "development" && (
+              <div className="mt-4 p-4 bg-yellow-100 rounded">
+                <h4 className="font-bold mb-2">Debug: Estrutura do divisaoResultado</h4>
+                <pre className="text-xs overflow-auto max-h-40">{JSON.stringify(divisaoResultado, null, 2)}</pre>
+              </div>
+            )}
           </CardContent>
         </Card>
       ) : (

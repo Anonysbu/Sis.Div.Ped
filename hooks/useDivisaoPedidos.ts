@@ -29,6 +29,10 @@ type ItemPedido = {
 type DivisaoItem = {
   quantidade: number
   valorTotal: number
+  nome: string
+  unidade: string
+  valorUnitario: number
+  recursosElegiveis: string[]
 }
 
 type DivisaoResultado = {
@@ -241,6 +245,10 @@ export function useDivisaoPedidos() {
           divisao[recursoId].itens[ip.itemId] = {
             quantidade: 0,
             valorTotal: 0,
+            nome: item.nome,
+            unidade: item.unidade,
+            valorUnitario: item.valorUnitario,
+            recursosElegiveis: item.recursosElegiveis,
           }
         }
 
@@ -279,6 +287,10 @@ export function useDivisaoPedidos() {
       novoResultado[recursoOrigemId].itens[itemId] = {
         quantidade: quantidadeRestanteOrigem,
         valorTotal: Number((quantidadeRestanteOrigem * valorUnitario).toFixed(2)),
+        nome: item.nome,
+        unidade: item.unidade,
+        valorUnitario: item.valorUnitario,
+        recursosElegiveis: item.recursosElegiveis,
       }
     } else {
       delete novoResultado[recursoOrigemId].itens[itemId]
@@ -292,6 +304,10 @@ export function useDivisaoPedidos() {
       novoResultado[recursoDestinoId].itens[itemId] = {
         quantidade: 0,
         valorTotal: 0,
+        nome: item.nome,
+        unidade: item.unidade,
+        valorUnitario: item.valorUnitario,
+        recursosElegiveis: item.recursosElegiveis,
       }
     }
 
