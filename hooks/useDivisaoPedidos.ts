@@ -439,6 +439,7 @@ export function useDivisaoPedidos() {
   
     const wsTotal = XLSX.utils.json_to_sheet(totalDados);
   
+    // Configurar colunas
     wsTotal["!cols"] = [
       { wch: 5 },
       { wch: 30 },
@@ -447,6 +448,19 @@ export function useDivisaoPedidos() {
       { wch: 17 },
       { wch: 17 },
     ];
+  
+    // Aplicar máscara de valores (formato monetário)
+    const range = XLSX.utils.decode_range(wsTotal["!ref"]);
+    for (let R = range.s.r; R <= range.e.r; ++R) {
+      for (let C = 4; C <= 5; ++C) { // Colunas "VALOR UNI." e "VALOR TOTAL"
+        const cellAddress = { r: R, c: C };
+        const cellRef = XLSX.utils.encode_cell(cellAddress);
+  
+        if (wsTotal[cellRef]) {
+          wsTotal[cellRef].z = '"R$"#,##0.00'; // Formato monetário brasileiro
+        }
+      }
+    }
   
     // Adicionar estilos à planilha "TOTAL"
     applyStyles(wsTotal);
@@ -518,14 +532,14 @@ export function useDivisaoPedidos() {
   
     for (let R = range.s.r; R <= range.e.r; ++R) {
       for (let C = range.s.c; C <= range.e.c; ++C) {
-        const cell_address = { r: R, c: C };
-        const cell_ref = XLSX.utils.encode_cell(cell_address);
+        const cellAddress = { r: R, c: C };
+        const cellRef = XLSX.utils.encode_cell(cellAddress);
   
-        if (!worksheet[cell_ref]) continue;
+        if (!worksheet[cellRef]) continue;
   
         // Primeira linha (cabeçalho) em negrito e centralizado
         if (R === 0) {
-          worksheet[cell_ref].s = {
+          worksheet[cellRef].s = {
             font: { bold: true },
             alignment: { horizontal: "center", vertical: "center" },
             border: {
@@ -537,7 +551,7 @@ export function useDivisaoPedidos() {
           };
         } else {
           // Linhas normais com borda
-          worksheet[cell_ref].s = {
+          worksheet[cellRef].s = {
             alignment: { horizontal: "center", vertical: "center" },
             border: {
               top: { style: "thin" },
