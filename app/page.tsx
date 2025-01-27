@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Download, ArrowRightLeft, Trash2, PlusCircle, FileSpreadsheet } from "lucide-react"
+import { Download, ArrowRightLeft, Trash2, PlusCircle } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import {
   Dialog,
@@ -267,12 +267,7 @@ export default function DivisaoPedidos() {
 
   return (
     <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
-      <div className="flex items-center justify-center mb-6">
-        <FileSpreadsheet className="h-10 w-10 text-blue-600 mr-4" />
-        <h1 className="text-4xl font-bold text-center text-blue-600 bg-white px-6 py-2 rounded-lg shadow-md">
-          Sistema de Divisão de Pedidos
-        </h1>
-      </div>
+      <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">Sistema de Divisão de Pedidos</h1>
 
       {error && (
         <Alert variant="destructive" className="mb-6">
@@ -281,104 +276,108 @@ export default function DivisaoPedidos() {
         </Alert>
       )}
 
-      <Card className="mb-6 bg-white shadow-md">
-        <CardHeader>
-          <CardTitle className="text-lg font-semibold text-blue-600 flex items-center">
-            <PlusCircle className="h-5 w-5 mr-2" />
-            Adicionar Novo Contrato
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="nomeContrato" className="text-sm font-medium text-gray-700">
-                Nome do Contrato
-              </Label>
-              <Input
-                id="nomeContrato"
-                value={novoContrato.nome}
-                onChange={(e) => setNovoContrato((prev) => ({ ...prev, nome: e.target.value }))}
-                className="mt-1"
-              />
+      <Accordion type="single" collapsible className="mb-6">
+        <AccordionItem value="novo-contrato">
+          <AccordionTrigger className="text-lg font-semibold">
+            <div className="flex items-center">
+              <PlusCircle className="h-5 w-5 mr-2" />
+              Adicionar Novo Contrato
             </div>
-            <div>
-              <Label htmlFor="nomeItem" className="text-sm font-medium text-gray-700">
-                Nome do Item
-              </Label>
-              <Input
-                id="nomeItem"
-                value={novoItem.nome}
-                onChange={(e) => setNovoItem((prev) => ({ ...prev, nome: e.target.value }))}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="unidadeItem" className="text-sm font-medium text-gray-700">
-                Unidade
-              </Label>
-              <Input
-                id="unidadeItem"
-                value={novoItem.unidade}
-                onChange={(e) => setNovoItem((prev) => ({ ...prev, unidade: e.target.value }))}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label htmlFor="valorUnitarioItem" className="text-sm font-medium text-gray-700">
-                Valor Unitário
-              </Label>
-              <Input
-                id="valorUnitarioItem"
-                type="number"
-                value={novoItem.valorUnitario}
-                onChange={(e) => setNovoItem((prev) => ({ ...prev, valorUnitario: Number(e.target.value) }))}
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <Label className="text-sm font-medium text-gray-700">Recursos Elegíveis</Label>
-              <div className="space-y-2 mt-1">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="todos-recursos-elegiveis"
-                    checked={todosRecursosElegiveis}
-                    onCheckedChange={handleToggleTodosRecursosElegiveis}
-                  />
-                  <Label htmlFor="todos-recursos-elegiveis" className="text-sm text-gray-600">
-                    Selecionar Todos
+          </AccordionTrigger>
+          <AccordionContent>
+            <Card className="bg-white shadow-md">
+              <CardContent className="space-y-4 p-4">
+                <div>
+                  <Label htmlFor="nomeContrato" className="text-sm font-medium text-gray-700">
+                    Nome do Contrato
                   </Label>
+                  <Input
+                    id="nomeContrato"
+                    value={novoContrato.nome}
+                    onChange={(e) => setNovoContrato((prev) => ({ ...prev, nome: e.target.value }))}
+                    className="mt-1"
+                  />
                 </div>
-                {RECURSOS_PREDEFINIDOS.map((recurso) => (
-                  <div key={recurso.id} className="flex items-center space-x-2">
-                    <Checkbox
-                      id={`recurso-${recurso.id}`}
-                      checked={novoItem.recursosElegiveis.includes(recurso.id)}
-                      onCheckedChange={() => toggleRecursoElegivel(recurso.id)}
-                    />
-                    <Label htmlFor={`recurso-${recurso.id}`} className="text-sm text-gray-600">
-                      {recurso.nome}
-                    </Label>
+                <div>
+                  <Label htmlFor="nomeItem" className="text-sm font-medium text-gray-700">
+                    Nome do Item
+                  </Label>
+                  <Input
+                    id="nomeItem"
+                    value={novoItem.nome}
+                    onChange={(e) => setNovoItem((prev) => ({ ...prev, nome: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="unidadeItem" className="text-sm font-medium text-gray-700">
+                    Unidade
+                  </Label>
+                  <Input
+                    id="unidadeItem"
+                    value={novoItem.unidade}
+                    onChange={(e) => setNovoItem((prev) => ({ ...prev, unidade: e.target.value }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="valorUnitarioItem" className="text-sm font-medium text-gray-700">
+                    Valor Unitário
+                  </Label>
+                  <Input
+                    id="valorUnitarioItem"
+                    type="number"
+                    value={novoItem.valorUnitario}
+                    onChange={(e) => setNovoItem((prev) => ({ ...prev, valorUnitario: Number(e.target.value) }))}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Recursos Elegíveis</Label>
+                  <div className="space-y-2 mt-1">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="todos-recursos-elegiveis"
+                        checked={todosRecursosElegiveis}
+                        onCheckedChange={handleToggleTodosRecursosElegiveis}
+                      />
+                      <Label htmlFor="todos-recursos-elegiveis" className="text-sm text-gray-600">
+                        Selecionar Todos
+                      </Label>
+                    </div>
+                    {RECURSOS_PREDEFINIDOS.map((recurso) => (
+                      <div key={recurso.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`recurso-${recurso.id}`}
+                          checked={novoItem.recursosElegiveis.includes(recurso.id)}
+                          onCheckedChange={() => toggleRecursoElegivel(recurso.id)}
+                        />
+                        <Label htmlFor={`recurso-${recurso.id}`} className="text-sm text-gray-600">
+                          {recurso.nome}
+                        </Label>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-            <Button onClick={handleAdicionarItemAoContrato} className="w-full">
-              Adicionar Item ao Contrato
-            </Button>
-            <div>
-              <h3 className="font-bold mb-2 text-sm text-gray-700">Itens do Contrato</h3>
-              {novoContrato.itens.map((item, index) => (
-                <div key={index} className="mb-2 text-sm text-gray-600">
-                  {item.nome} - {item.unidade} - R$ {item.valorUnitario.toFixed(2)}
                 </div>
-              ))}
-            </div>
-            <Button onClick={handleAdicionarContrato} className="w-full bg-blue-600 hover:bg-blue-700">
-              Salvar Contrato
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+                <Button onClick={handleAdicionarItemAoContrato} className="w-full">
+                  Adicionar Item ao Contrato
+                </Button>
+                <div>
+                  <h3 className="font-bold mb-2 text-sm text-gray-700">Itens do Contrato</h3>
+                  {novoContrato.itens.map((item, index) => (
+                    <div key={index} className="mb-2 text-sm text-gray-600">
+                      {item.nome} - {item.unidade} - R$ {item.valorUnitario.toFixed(2)}
+                    </div>
+                  ))}
+                </div>
+                <Button onClick={handleAdicionarContrato} className="w-full bg-blue-600 hover:bg-blue-700">
+                  Salvar Contrato
+                </Button>
+              </CardContent>
+            </Card>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       <Card className="mb-6 bg-white shadow-md">
         <CardHeader>
