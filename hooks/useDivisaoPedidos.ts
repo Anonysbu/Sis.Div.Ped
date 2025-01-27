@@ -439,7 +439,6 @@ export function useDivisaoPedidos() {
   
     const wsTotal = XLSX.utils.json_to_sheet(totalDados);
   
-    // Configurar colunas
     wsTotal["!cols"] = [
       { wch: 5 },
       { wch: 30 },
@@ -449,21 +448,8 @@ export function useDivisaoPedidos() {
       { wch: 17 },
     ];
   
-    // Aplicar máscara de valores (formato monetário)
-    const range = XLSX.utils.decode_range(wsTotal["!ref"]);
-    for (let R = range.s.r; R <= range.e.r; ++R) {
-      for (let C = 4; C <= 5; ++C) { // Colunas "VALOR UNI." e "VALOR TOTAL"
-        const cellAddress = { r: R, c: C };
-        const cellRef = XLSX.utils.encode_cell(cellAddress);
-  
-        if (wsTotal[cellRef]) {
-          wsTotal[cellRef].z = '"R$"#,##0.00'; // Formato monetário brasileiro
-        }
-      }
-    }
-  
-    // Adicionar estilos à planilha "TOTAL"
-    applyStyles(wsTotal);
+    // Aplicar máscara de valores e estilos à planilha "TOTAL"
+    applyStyles(wsTotal, true);
   
     XLSX.utils.book_append_sheet(wb, wsTotal, "TOTAL");
   
@@ -512,8 +498,8 @@ export function useDivisaoPedidos() {
         { wch: 17 },
       ];
   
-      // Adicionar estilos à planilha do recurso
-      applyStyles(ws);
+      // Aplicar máscara de valores e estilos à planilha do recurso
+      applyStyles(ws, true);
   
       XLSX.utils.book_append_sheet(wb, ws, recursoNome || recursoId);
     });
@@ -526,8 +512,8 @@ export function useDivisaoPedidos() {
     XLSX.writeFile(wb, nomeArquivo);
   };
   
-  // Função para aplicar estilos (borda e alinhamento)
-  const applyStyles = (worksheet) => {
+  // Função para aplicar estilos e máscara de valores
+  const applyStyles = (worksheet, applyValueMask = false) => {
     const range = XLSX.utils.decode_range(worksheet["!ref"]);
   
     for (let R = range.s.r; R <= range.e.r; ++R) {
@@ -560,6 +546,11 @@ export function useDivisaoPedidos() {
               right: { style: "thin" },
             },
           };
+  
+          // Aplicar máscara de valores às colunas "VALOR UNI." (4) e "VALOR TOTAL" (5)
+          if (applyValueMask && (C === 4 || C === 5)) {
+            worksheet[cellRef].z = '"R$"#,##0.00'; // Formato monetário brasileiro
+          }
         }
       }
     }
