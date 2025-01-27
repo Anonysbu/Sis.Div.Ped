@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback } from "react"
 import { useDivisaoPedidos } from "../hooks/useDivisaoPedidos"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Download, ArrowRightLeft, Plus, Minus, Trash2 } from "lucide-react"
+import { Download, ArrowRightLeft, Trash2 } from "lucide-react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import {
   Dialog,
@@ -46,44 +46,47 @@ export default function DivisaoPedidos() {
   const [todosRecursosSelecionados, setTodosRecursosSelecionados] = useState(false)
   const [todosRecursosElegiveis, setTodosRecursosElegiveis] = useState(false)
 
-  const handleAdicionarItemAoContrato = () => {
+  const handleAdicionarItemAoContrato = useCallback(() => {
     setNovoContrato((prev) => ({
       ...prev,
       itens: [...prev.itens, { ...novoItem, id: Date.now().toString() }],
     }))
     setNovoItem({ nome: "", unidade: "", valorUnitario: 0, recursosElegiveis: [] })
-  }
+  }, [novoItem])
 
-  const handleAdicionarContrato = async () => {
+  const handleAdicionarContrato = useCallback(async () => {
     await adicionarContrato({
       id: Date.now().toString(),
       nome: novoContrato.nome,
       itens: novoContrato.itens,
     })
     setNovoContrato({ nome: "", itens: [] })
-  }
+  }, [adicionarContrato, novoContrato])
 
-  const handleTransferirItem = (itemId: string, recursoOrigemId: string) => {
-    const quantidade = quantidadeTransferencia[`${itemId}-${recursoOrigemId}`] || 0
-    const destino = recursoDestino[`${itemId}-${recursoOrigemId}`]
-    if (destino && quantidade > 0) {
-      transferirItem(itemId, quantidade, recursoOrigemId, destino)
-      setQuantidadeTransferencia((prev) => ({ ...prev, [`${itemId}-${recursoOrigemId}`]: 0 }))
-      setRecursoDestino((prev) => ({ ...prev, [`${itemId}-${recursoOrigemId}`]: "" }))
-    }
-  }
+  const handleTransferirItem = useCallback(
+    (itemId: string, recursoOrigemId: string) => {
+      const quantidade = quantidadeTransferencia[`${itemId}-${recursoOrigemId}`] || 0
+      const destino = recursoDestino[`${itemId}-${recursoOrigemId}`]
+      if (destino && quantidade > 0) {
+        transferirItem(itemId, quantidade, recursoOrigemId, destino)
+        setQuantidadeTransferencia((prev) => ({ ...prev, [`${itemId}-${recursoOrigemId}`]: 0 }))
+        setRecursoDestino((prev) => ({ ...prev, [`${itemId}-${recursoOrigemId}`]: "" }))
+      }
+    },
+    [transferirItem, quantidadeTransferencia, recursoDestino],
+  )
 
-  const toggleRecursoElegivel = (recursoId: string) => {
+  const toggleRecursoElegivel = useCallback((recursoId: string) => {
     setNovoItem((prev) => ({
       ...prev,
       recursosElegiveis: prev.recursosElegiveis.includes(recursoId)
         ? prev.recursosElegiveis.filter((id) => id !== recursoId)
         : [...prev.recursosElegiveis, recursoId],
     }))
-  }
+  }, [])
 
-  const handleToggleTodosRecursos = () => {
-    setTodosRecursosSelecionados(!todosRecursosSelecionados)
+  const handleToggleTodosRecursos = useCallback(() => {
+    setTodosRecursosSelecionados((prev) => !prev)
     if (!todosRecursosSelecionados) {
       RECURSOS_PREDEFINIDOS.forEach((recurso) => {
         if (!recursosSelecionados.includes(recurso.id)) {
@@ -95,33 +98,28 @@ export default function DivisaoPedidos() {
         toggleRecursoSelecionado(recursoId)
       })
     }
-  }
+  }, [todosRecursosSelecionados, RECURSOS_PREDEFINIDOS, recursosSelecionados, toggleRecursoSelecionado])
 
-  const handleToggleTodosRecursosElegiveis = () => {
-    setTodosRecursosElegiveis(!todosRecursosElegiveis)
-    if (!todosRecursosElegiveis) {
-      setNovoItem((prev) => ({
-        ...prev,
-        recursosElegiveis: RECURSOS_PREDEFINIDOS.map((r) => r.id),
-      }))
-    } else {
-      setNovoItem((prev) => ({
-        ...prev,
-        recursosElegiveis: [],
-      }))
-    }
-  }
+  const handleToggleTodosRecursosElegiveis = useCallback(() => {
+    setTodosRecursosElegiveis((prev) => !prev)
+    setNovoItem((prev) => ({
+      ...prev,
+      recursosElegiveis: !todosRecursosElegiveis ? RECURSOS_PREDEFINIDOS.map((r) => r.id) : [],
+    }))
+  }, [todosRecursosElegiveis, RECURSOS_PREDEFINIDOS])
 
   return (
     <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-center text-blue-600">Sistema de Divisão de Pedidos</h1>
 
+      {/* Accordion for adding new contract */}
       <Accordion type="single" collapsible className="mb-6">
         <AccordionItem value="novo-contrato">
           <AccordionTrigger className="text-lg font-semibold">Adicionar Novo Contrato</AccordionTrigger>
           <AccordionContent>
             <Card className="bg-white shadow-md">
               <CardContent className="space-y-4 p-4">
+                {/* Form fields for new contract */}
                 <div>
                   <Label htmlFor="nomeContrato" className="text-sm font-medium text-gray-700">
                     Nome do Contrato
@@ -330,12 +328,15 @@ export default function DivisaoPedidos() {
                 const dados = divisaoResultado[recursoId]
                 if (!dados || Object.keys(dados.itens).length === 0) return null
 
+                const recurso = RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)
+                if (!recurso) return null
+
                 return (
                   <Accordion type="single" collapsible className="mb-4" key={recursoId}>
                     <AccordionItem value={recursoId}>
                       <AccordionTrigger className="text-sm font-medium text-gray-700 hover:bg-gray-50">
                         <div className="flex justify-between w-full pr-4">
-                          <span>{RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)?.nome}</span>
+                          <span>{recurso.nome}</span>
                           <span className="font-semibold">R$ {dados.valorTotal.toFixed(2)}</span>
                         </div>
                       </AccordionTrigger>
@@ -366,8 +367,7 @@ export default function DivisaoPedidos() {
                                       <DialogHeader>
                                         <DialogTitle>Transferir Item</DialogTitle>
                                         <DialogDescription>
-                                          Transferir {item.nome} de{" "}
-                                          {RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)?.nome}
+                                          Transferir {item.nome} de {recurso.nome}
                                         </DialogDescription>
                                       </DialogHeader>
                                       <div className="flex items-center gap-4">

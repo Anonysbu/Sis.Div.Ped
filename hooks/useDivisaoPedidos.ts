@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import * as XLSX from "xlsx"
 import { supabase } from "../lib/supabase"
 
@@ -58,31 +58,34 @@ export function useDivisaoPedidos() {
   const [recursosSelecionados, setRecursosSelecionados] = useState<string[]>([])
   const [divisaoResultado, setDivisaoResultado] = useState<DivisaoResultado | null>(null)
 
-  useEffect(() => {
-    carregarContratos()
-  }, [])
-
-  const carregarContratos = async () => {
+  // Carregar contratos e itens do Supabase
+  const carregarContratos = useCallback(async () => {
     try {
-      const { data, error } = await supabase.from("contratos").select("*")
+      const { data: contratosData, error: contratosError } = await supabase.from("contratos").select("*")
 
-      if (error) throw error
+      if (contratosError) throw contratosError
 
       const contratosComItens = await Promise.all(
-        data.map(async (contrato) => {
-          const { data: itens, error: itensError } = await supabase
+        contratosData.map(async (contrato) => {
+          const { data: itensData, error: itensError } = await supabase
             .from("itens")
             .select("*")
             .eq("contrato_id", contrato.id)
 
           if (itensError) throw itensError
 
+          const itens = itensData.map((item) => ({
+            id: item.id,
+            nome: item.nome,
+            unidade: item.unidade,
+            valorUnitario: Number(item.valor_unitario),
+            recursosElegiveis: item.recursos_elegiveis ? item.recursos_elegiveis.split(",") : [],
+          }))
+
           return {
-            ...contrato,
-            itens: itens.map((item) => ({
-              ...item,
-              recursosElegiveis: item.recursos_elegiveis.split(","),
-            })),
+            id: contrato.id,
+            nome: contrato.nome,
+            itens,
           }
         }),
       )
@@ -91,7 +94,11 @@ export function useDivisaoPedidos() {
     } catch (error) {
       console.error("Erro ao carregar contratos:", error)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    carregarContratos()
+  }, [carregarContratos])
 
   const adicionarContrato = async (novoContrato: Contrato) => {
     try {
@@ -141,35 +148,41 @@ export function useDivisaoPedidos() {
 
   const selecionarContrato = (contratoId: string) => {
     const contrato = contratos.find((c) => c.id === contratoId)
+    console.log("Selecionando contrato:", contrato)
+
     setContratoSelecionado(contrato || null)
     setItensPedido(contrato ? contrato.itens.map((item) => ({ itemId: item.id, quantidade: 0 })) : [])
-    // Resetar recursos selecionados quando um novo contrato é selecionado
     setRecursosSelecionados([])
+    setDivisaoResultado(null)
   }
 
   const atualizarQuantidadeItem = (itemId: string, quantidade: number) => {
-    setItensPedido(itensPedido.map((ip) => (ip.itemId === itemId ? { ...ip, quantidade } : ip)))
+    console.log("Atualizando quantidade:", { itemId, quantidade })
+    setItensPedido((prev) => prev.map((ip) => (ip.itemId === itemId ? { ...ip, quantidade } : ip)))
   }
 
   const toggleRecursoSelecionado = (recursoId: string) => {
+    console.log("Toggle recurso:", recursoId)
     setRecursosSelecionados((prev) =>
       prev.includes(recursoId) ? prev.filter((id) => id !== recursoId) : [...prev, recursoId],
     )
   }
 
-  const calcularDivisao = () => {
-    if (!contratoSelecionado) return null
+  const calcularDivisao = useCallback(() => {
+    if (!contratoSelecionado) {
+      console.log("Nenhum contrato selecionado")
+      return
+    }
 
-    // Verificar se há itens com quantidade maior que zero
     const itensComQuantidade = itensPedido.filter((ip) => ip.quantidade > 0)
     if (itensComQuantidade.length === 0 || recursosSelecionados.length === 0) {
+      console.log("Sem itens com quantidade ou recursos selecionados")
       setDivisaoResultado(null)
       return
     }
 
     const divisao: DivisaoResultado = {}
 
-    // Inicializar a estrutura de divisão para todos os recursos selecionados
     recursosSelecionados.forEach((recursoId) => {
       divisao[recursoId] = {
         itens: {},
@@ -177,49 +190,35 @@ export function useDivisaoPedidos() {
       }
     })
 
-    // Para cada item com quantidade > 0
     itensComQuantidade.forEach((ip) => {
       const item = contratoSelecionado.itens.find((i) => i.id === ip.itemId)
       if (!item) return
 
-      // Converter string de recursos elegíveis para array
-      const recursosElegiveisArray = item.recursosElegiveis || []
-
-      // Filtrar apenas recursos elegíveis que foram selecionados
-      const recursosElegiveis = recursosSelecionados.filter((r) => recursosElegiveisArray.includes(r))
+      const recursosElegiveis = recursosSelecionados.filter((recursoId) => item.recursosElegiveis.includes(recursoId))
 
       if (recursosElegiveis.length === 0) return
 
-      const quantidadeTotal = Math.max(0, Number.parseInt(String(ip.quantidade)) || 0)
-      const valorUnitario = Number.parseFloat(String(item.valorUnitario)) || 0
+      const quantidadePorRecurso = Math.floor(ip.quantidade / recursosElegiveis.length)
+      let restante = ip.quantidade % recursosElegiveis.length
 
-      // Calcular a quantidade base e o resto
-      const quantidadePorRecurso = Math.floor(quantidadeTotal / recursosElegiveis.length)
-      let restante = quantidadeTotal % recursosElegiveis.length
-
-      // Distribuir os itens entre os recursos elegíveis
       recursosElegiveis.forEach((recursoId) => {
-        // Adicionar um item extra se ainda houver restante
         const quantidadeAtribuida = quantidadePorRecurso + (restante > 0 ? 1 : 0)
+        const valorTotalItem = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2))
 
-        if (quantidadeAtribuida > 0) {
-          const valorTotalItem = Number((quantidadeAtribuida * valorUnitario).toFixed(2))
-
-          divisao[recursoId].itens[ip.itemId] = {
-            quantidade: quantidadeAtribuida,
-            valorTotal: valorTotalItem,
-          }
-
-          // Atualizar o valor total do recurso
-          divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotalItem).toFixed(2))
+        divisao[recursoId].itens[ip.itemId] = {
+          quantidade: quantidadeAtribuida,
+          valorTotal: valorTotalItem,
         }
+
+        divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotalItem).toFixed(2))
 
         if (restante > 0) restante--
       })
     })
 
+    console.log("Resultado da divisão:", divisao)
     setDivisaoResultado(divisao)
-  }
+  }, [contratoSelecionado, itensPedido, recursosSelecionados])
 
   const transferirItem = (itemId: string, quantidade: number, recursoOrigemId: string, recursoDestinoId: string) => {
     if (!divisaoResultado || !contratoSelecionado) return
