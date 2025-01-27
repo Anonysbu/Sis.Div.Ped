@@ -398,8 +398,8 @@ export function useDivisaoPedidos() {
         Item: itemDados.nome,
         Unidade: itemDados.unidade,
         Quantidade: itemDados.quantidade,
-        "Valor Unitário": `R$ ${itemDados.valorUnitario.toFixed(2)}`,
-        "Valor Total": `R$ ${itemDados.valorTotal.toFixed(2)}`,
+        "Valor Unitário": itemDados.valorUnitario,
+        "Valor Total": itemDados.valorTotal,
       }))
 
       // Adicionar linha de total
@@ -408,7 +408,7 @@ export function useDivisaoPedidos() {
         Unidade: "",
         Quantidade: "",
         "Valor Unitário": "",
-        "Valor Total": `R$ ${dados.valorTotal.toFixed(2)}`,
+        "Valor Total": dados.valorTotal,
       })
 
       // Criar e formatar a planilha
@@ -418,6 +418,43 @@ export function useDivisaoPedidos() {
       const colunas = ["A", "B", "C", "D", "E"]
       const larguras = [30, 15, 15, 20, 20]
       ws["!cols"] = larguras.map((w) => ({ wch: w }))
+
+      // Adicionar estilos
+      const range = XLSX.utils.decode_range(ws["!ref"]!)
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cell_address = { c: C, r: R }
+          const cell_ref = XLSX.utils.encode_cell(cell_address)
+          if (!ws[cell_ref]) continue
+
+          // Estilo para cabeçalho
+          if (R === 0) {
+            ws[cell_ref].s = {
+              font: { bold: true, color: { rgb: "FFFFFF" } },
+              fill: { fgColor: { rgb: "4F81BD" } },
+              alignment: { horizontal: "center", vertical: "center" },
+            }
+          }
+          // Estilo para células normais
+          else {
+            ws[cell_ref].s = {
+              font: { color: { rgb: "000000" } },
+              alignment: { horizontal: "center", vertical: "center" },
+              border: {
+                top: { style: "thin", color: { rgb: "000000" } },
+                bottom: { style: "thin", color: { rgb: "000000" } },
+                left: { style: "thin", color: { rgb: "000000" } },
+                right: { style: "thin", color: { rgb: "000000" } },
+              },
+            }
+          }
+
+          // Formatar células de valor como moeda
+          if (C === 3 || C === 4) {
+            ws[cell_ref].z = '"R$"#,##0.00'
+          }
+        }
+      }
 
       // Adicionar a planilha ao workbook
       XLSX.utils.book_append_sheet(wb, ws, recursoNome || recursoId)
