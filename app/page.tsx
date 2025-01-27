@@ -71,7 +71,14 @@ export default function DivisaoPedidos() {
       const quantidade = quantidadeTransferencia[`${itemId}-${recursoOrigemId}`] || 0
       const destino = recursoDestino[`${itemId}-${recursoOrigemId}`]
       if (destino && quantidade > 0) {
+        console.log("Transferindo:", {
+          itemId,
+          quantidade,
+          origem: recursoOrigemId,
+          destino,
+        })
         transferirItem(itemId, quantidade, recursoOrigemId, destino)
+        // Reset the transfer form
         setQuantidadeTransferencia((prev) => ({ ...prev, [`${itemId}-${recursoOrigemId}`]: 0 }))
         setRecursoDestino((prev) => ({ ...prev, [`${itemId}-${recursoOrigemId}`]: "" }))
       }
@@ -193,14 +200,16 @@ export default function DivisaoPedidos() {
                                   <Label>Quantidade</Label>
                                   <Input
                                     type="number"
+                                    min={1}
                                     max={itemDados.quantidade}
                                     value={quantidadeTransferencia[`${itemId}-${recursoId}`] || ""}
-                                    onChange={(e) =>
+                                    onChange={(e) => {
+                                      const value = Math.min(Number(e.target.value), itemDados.quantidade)
                                       setQuantidadeTransferencia((prev) => ({
                                         ...prev,
-                                        [`${itemId}-${recursoId}`]: Number(e.target.value),
+                                        [`${itemId}-${recursoId}`]: value,
                                       }))
-                                    }
+                                    }}
                                   />
                                 </div>
                                 <div className="flex-1">
@@ -219,7 +228,7 @@ export default function DivisaoPedidos() {
                                     </SelectTrigger>
                                     <SelectContent>
                                       {recursosSelecionados
-                                        .filter((id) => id !== recursoId)
+                                        .filter((id) => id !== recursoId && itemDados.recursosElegiveis?.includes(id))
                                         .map((id) => (
                                           <SelectItem key={id} value={id}>
                                             {RECURSOS_PREDEFINIDOS.find((r) => r.id === id)?.nome}
@@ -228,7 +237,14 @@ export default function DivisaoPedidos() {
                                     </SelectContent>
                                   </Select>
                                 </div>
-                                <Button onClick={() => handleTransferirItem(itemId, recursoId)} className="mt-auto">
+                                <Button
+                                  onClick={() => handleTransferirItem(itemId, recursoId)}
+                                  className="mt-auto"
+                                  disabled={
+                                    !quantidadeTransferencia[`${itemId}-${recursoId}`] ||
+                                    !recursoDestino[`${itemId}-${recursoId}`]
+                                  }
+                                >
                                   Confirmar
                                 </Button>
                               </div>
@@ -258,14 +274,12 @@ export default function DivisaoPedidos() {
         </Alert>
       )}
 
-      {/* Accordion for adding new contract */}
       <Accordion type="single" collapsible className="mb-6">
         <AccordionItem value="novo-contrato">
           <AccordionTrigger className="text-lg font-semibold">Adicionar Novo Contrato</AccordionTrigger>
           <AccordionContent>
             <Card className="bg-white shadow-md">
               <CardContent className="space-y-4 p-4">
-                {/* Form fields for new contract */}
                 <div>
                   <Label htmlFor="nomeContrato" className="text-sm font-medium text-gray-700">
                     Nome do Contrato

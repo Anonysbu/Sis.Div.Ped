@@ -265,62 +265,86 @@ export function useDivisaoPedidos() {
   }, [contratoSelecionado, itensPedido, recursosSelecionados])
 
   const transferirItem = (itemId: string, quantidade: number, recursoOrigemId: string, recursoDestinoId: string) => {
-    if (!divisaoResultado || !contratoSelecionado) return
+    console.log("Iniciando transferência:", {
+      itemId,
+      quantidade,
+      recursoOrigemId,
+      recursoDestinoId,
+    })
 
-    const novoResultado = JSON.parse(JSON.stringify(divisaoResultado))
-    const item = contratoSelecionado.itens.find((i) => i.id === itemId)
-    if (!item) return
-
-    if (
-      !novoResultado[recursoOrigemId]?.itens[itemId] ||
-      novoResultado[recursoOrigemId].itens[itemId].quantidade < quantidade
-    ) {
-      return
-    }
-
-    const valorUnitario = Number(item.valorUnitario)
-    const valorTransferencia = Number((quantidade * valorUnitario).toFixed(2))
-
-    const quantidadeRestanteOrigem = novoResultado[recursoOrigemId].itens[itemId].quantidade - quantidade
-
-    if (quantidadeRestanteOrigem > 0) {
-      novoResultado[recursoOrigemId].itens[itemId] = {
-        quantidade: quantidadeRestanteOrigem,
-        valorTotal: Number((quantidadeRestanteOrigem * valorUnitario).toFixed(2)),
-        nome: item.nome,
-        unidade: item.unidade,
-        valorUnitario: item.valorUnitario,
-        recursosElegiveis: item.recursosElegiveis,
+    setDivisaoResultado((prevDivisao) => {
+      if (!prevDivisao || !contratoSelecionado) {
+        console.error("Não há resultado de divisão ou contrato selecionado")
+        return prevDivisao
       }
-    } else {
-      delete novoResultado[recursoOrigemId].itens[itemId]
-    }
 
-    novoResultado[recursoOrigemId].valorTotal = Number(
-      (novoResultado[recursoOrigemId].valorTotal - valorTransferencia).toFixed(2),
-    )
+      const novoResultado = JSON.parse(JSON.stringify(prevDivisao))
+      const item = contratoSelecionado.itens.find((i) => i.id === itemId)
 
-    if (!novoResultado[recursoDestinoId].itens[itemId]) {
-      novoResultado[recursoDestinoId].itens[itemId] = {
-        quantidade: 0,
-        valorTotal: 0,
-        nome: item.nome,
-        unidade: item.unidade,
-        valorUnitario: item.valorUnitario,
-        recursosElegiveis: item.recursosElegiveis,
+      if (!item) {
+        console.error("Item não encontrado:", itemId)
+        return prevDivisao
       }
-    }
 
-    novoResultado[recursoDestinoId].itens[itemId].quantidade += quantidade
-    novoResultado[recursoDestinoId].itens[itemId].valorTotal = Number(
-      (novoResultado[recursoDestinoId].itens[itemId].quantidade * valorUnitario).toFixed(2),
-    )
+      if (
+        !novoResultado[recursoOrigemId]?.itens[itemId] ||
+        novoResultado[recursoOrigemId].itens[itemId].quantidade < quantidade
+      ) {
+        console.error("Quantidade inválida para transferência")
+        return prevDivisao
+      }
 
-    novoResultado[recursoDestinoId].valorTotal = Number(
-      (novoResultado[recursoDestinoId].valorTotal + valorTransferencia).toFixed(2),
-    )
+      const valorUnitario = item.valorUnitario
+      const valorTransferencia = Number((quantidade * valorUnitario).toFixed(2))
 
-    setDivisaoResultado(novoResultado)
+      // Atualiza recurso de origem
+      const quantidadeRestanteOrigem = novoResultado[recursoOrigemId].itens[itemId].quantidade - quantidade
+
+      if (quantidadeRestanteOrigem > 0) {
+        novoResultado[recursoOrigemId].itens[itemId] = {
+          ...novoResultado[recursoOrigemId].itens[itemId],
+          quantidade: quantidadeRestanteOrigem,
+          valorTotal: Number((quantidadeRestanteOrigem * valorUnitario).toFixed(2)),
+        }
+      } else {
+        delete novoResultado[recursoOrigemId].itens[itemId]
+      }
+
+      novoResultado[recursoOrigemId].valorTotal = Number(
+        (novoResultado[recursoOrigemId].valorTotal - valorTransferencia).toFixed(2),
+      )
+
+      // Atualiza recurso de destino
+      if (!novoResultado[recursoDestinoId]) {
+        novoResultado[recursoDestinoId] = {
+          itens: {},
+          valorTotal: 0,
+        }
+      }
+
+      if (!novoResultado[recursoDestinoId].itens[itemId]) {
+        novoResultado[recursoDestinoId].itens[itemId] = {
+          quantidade: 0,
+          valorTotal: 0,
+          nome: item.nome,
+          unidade: item.unidade,
+          valorUnitario: item.valorUnitario,
+          recursosElegiveis: item.recursosElegiveis,
+        }
+      }
+
+      novoResultado[recursoDestinoId].itens[itemId].quantidade += quantidade
+      novoResultado[recursoDestinoId].itens[itemId].valorTotal = Number(
+        (novoResultado[recursoDestinoId].itens[itemId].quantidade * valorUnitario).toFixed(2),
+      )
+
+      novoResultado[recursoDestinoId].valorTotal = Number(
+        (novoResultado[recursoDestinoId].valorTotal + valorTransferencia).toFixed(2),
+      )
+
+      console.log("Novo resultado após transferência:", novoResultado)
+      return novoResultado
+    })
   }
 
   const exportarParaPlanilha = () => {
@@ -366,13 +390,6 @@ export function useDivisaoPedidos() {
     a.click()
     window.URL.revokeObjectURL(url)
   }
-
-  useEffect(() => {
-    console.log("Estado atualizado - divisaoResultado:", divisaoResultado)
-    if (divisaoResultado) {
-      console.log("Estrutura do divisaoResultado:", JSON.stringify(divisaoResultado, null, 2))
-    }
-  }, [divisaoResultado])
 
   return {
     contratos,
