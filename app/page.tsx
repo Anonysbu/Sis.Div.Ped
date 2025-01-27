@@ -258,11 +258,14 @@ export default function DivisaoPedidos() {
                     <div key={itemPedido.itemId} className="flex items-center space-x-2 mb-2">
                       <span className="text-sm text-gray-600">{item?.nome}</span>
                       <Input
+                        id="quantidade"
+                        name="quantidade"
                         type="number"
                         placeholder="Quantidade"
                         value={itemPedido.quantidade}
                         onChange={(e) => atualizarQuantidadeItem(itemPedido.itemId, Number(e.target.value))}
                         className="w-24"
+                        aria-label={`Quantidade de ${item?.nome}`}
                       />
                       <span className="text-sm text-gray-600">{item?.unidade}</span>
                     </div>
@@ -307,7 +310,11 @@ export default function DivisaoPedidos() {
       </Card>
 
       <div className="flex space-x-2 mb-6">
-        <Button onClick={calcularDivisao} className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button
+          onClick={calcularDivisao}
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+          aria-label="Calcular divisão dos itens"
+        >
           Calcular Divisão
         </Button>
         {divisaoResultado && (
@@ -339,7 +346,10 @@ export default function DivisaoPedidos() {
                 return (
                   <Accordion type="single" collapsible className="mb-4" key={recursoId}>
                     <AccordionItem value={recursoId}>
-                      <AccordionTrigger className="text-sm font-medium text-gray-700 hover:bg-gray-50">
+                      <AccordionTrigger
+                        className="text-sm font-medium text-gray-700 hover:bg-gray-50"
+                        aria-label={`${recurso.nome} - R$ ${dados.valorTotal.toFixed(2)}`}
+                      >
                         <div className="flex justify-between w-full pr-4">
                           <span>{recurso.nome}</span>
                           <span className="font-semibold">R$ {dados.valorTotal.toFixed(2)}</span>
@@ -364,7 +374,12 @@ export default function DivisaoPedidos() {
                                     </div>
                                     <Dialog>
                                       <DialogTrigger asChild>
-                                        <Button variant="outline" size="sm" className="ml-4">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="ml-4"
+                                          aria-label={`Transferir ${item.nome}`}
+                                        >
                                           <ArrowRightLeft className="h-4 w-4 mr-2" />
                                           Transferir
                                         </Button>
