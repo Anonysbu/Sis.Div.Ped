@@ -55,6 +55,8 @@ const RECURSOS_PREDEFINIDOS: Recurso[] = [
   { id: "crianca", nome: "CRIANÇA FELIZ" },
 ]
 
+const RECURSOS_PRIORITARIOS = ["cozinha", "casa", "abrigo"]
+
 export function useDivisaoPedidos() {
   const [contratos, setContratos] = useState<Contrato[]>([])
   const [contratoSelecionado, setContratoSelecionado] = useState<Contrato | null>(null)
@@ -173,18 +175,12 @@ export function useDivisaoPedidos() {
 
   const calcularDivisao = useCallback(() => {
     console.log("Iniciando cálculo da divisão")
-    console.log("Contrato selecionado:", contratoSelecionado)
-    console.log("Itens do pedido:", itensPedido)
-    console.log("Recursos selecionados:", recursosSelecionados)
-
     if (!contratoSelecionado) {
       console.error("Nenhum contrato selecionado")
       return
     }
 
     const itensComQuantidade = itensPedido.filter((ip) => ip.quantidade > 0)
-    console.log("Itens com quantidade > 0:", itensComQuantidade)
-
     if (itensComQuantidade.length === 0) {
       console.error("Nenhum item com quantidade")
       setDivisaoResultado(null)
@@ -220,29 +216,155 @@ export function useDivisaoPedidos() {
         item.recursosElegiveis.includes(recursoId),
       )
 
-      console.log(`Recursos elegíveis disponíveis: ${recursosElegiveisDisponiveis}`)
-
       if (recursosElegiveisDisponiveis.length === 0) {
         console.warn(`Nenhum recurso elegível disponível para o item: ${item.nome}`)
         return
       }
 
-      const quantidadePorRecurso = Math.floor(ip.quantidade / recursosElegiveisDisponiveis.length)
-      let restante = ip.quantidade % recursosElegiveisDisponiveis.length
+      // Separar recursos prioritários e não prioritários
+      const recursosPrioritarios = recursosElegiveisDisponiveis.filter((r) => RECURSOS_PRIORITARIOS.includes(r))
+      const recursosNaoPrioritarios = recursosElegiveisDisponiveis.filter((r) => !RECURSOS_PRIORITARIOS.includes(r))
 
-      console.log(`Quantidade por recurso: ${quantidadePorRecurso}`)
-      console.log(`Restante: ${restante}`)
+      const quantidadeTotal = ip.quantidade
+      let quantidadeRestante = quantidadeTotal
 
-      recursosElegiveisDisponiveis.forEach((recursoId) => {
-        const quantidadeAtribuida = quantidadePorRecurso + (restante > 0 ? 1 : 0)
-        const valorTotalItem = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2))
+      // Distribuir 70% para recursos prioritários, se houver
+      if (recursosPrioritarios.length > 0) {
+        const quantidadePrioritaria = Math.floor(quantidadeTotal * 0.7)
+        const quantidadePorRecursoPrioritario = Math.floor(quantidadePrioritaria / recursosPrioritarios.length)
+        let restantePrioritario = quantidadePrioritaria % recursosPrioritarios.length
 
-        console.log(`Atribuindo ao recurso ${recursoId}:`)
-        console.log(`- Quantidade: ${quantidadeAtribuida}`)
-        console.log(`- Valor total: ${valorTotalItem}`)
+        recursosPrioritarios.forEach((recursoId) => {
+          const quantidadeAtribuida = quantidadePorRecursoPrioritario + (restantePrioritario > 0 ? 1 : 0)
+          if (restantePrioritario > 0) restantePrioritario--
 
-        if (!divisao[recursoId].itens[ip.itemId]) {
-          divisao[recursoId].itens[ip.itemId] = {
+          if (quantidadeAtribuida > 0) {
+            const valorTotalItem = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2))
+
+            if (!divisao[recursoId].itens[ip.itemId]) {
+              divisao[recursoId].itens[ip.itemId] = {
+                quantidade: 0,
+                valorTotal: 0,
+                nome: item.nome,
+                unidade: item.unidade,
+                valorUnitario: item.valorUnitario,
+                recursosElegiveis: item.recursosElegiveis,
+              }
+            }
+
+            divisao[recursoId].itens[ip.itemId].quantidade += quantidadeAtribuida
+            divisao[recursoId].itens[ip.itemId].valorTotal = Number(
+              (divisao[recursoId].itens[ip.itemId].quantidade * item.valorUnitario).toFixed(2),
+            )
+            divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotalItem).toFixed(2))
+
+            quantidadeRestante -= quantidadeAtribuida
+          }
+        })
+      }
+
+      // Distribuir o restante para recursos não prioritários
+      if (recursosNaoPrioritarios.length > 0 && quantidadeRestante > 0) {
+        const quantidadePorRecurso = Math.floor(quantidadeRestante / recursosNaoPrioritarios.length)
+        let restante = quantidadeRestante % recursosNaoPrioritarios.length
+
+        recursosNaoPrioritarios.forEach((recursoId) => {
+          const quantidadeAtribuida = quantidadePorRecurso + (restante > 0 ? 1 : 0)
+          if (restante > 0) restante--
+
+          if (quantidadeAtribuida > 0) {
+            const valorTotalItem = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2))
+
+            if (!divisao[recursoId].itens[ip.itemId]) {
+              divisao[recursoId].itens[ip.itemId] = {
+                quantidade: 0,
+                valorTotal: 0,
+                nome: item.nome,
+                unidade: item.unidade,
+                valorUnitario: item.valorUnitario,
+                recursosElegiveis: item.recursosElegiveis,
+              }
+            }
+
+            divisao[recursoId].itens[ip.itemId].quantidade += quantidadeAtribuida
+            divisao[recursoId].itens[ip.itemId].valorTotal = Number(
+              (divisao[recursoId].itens[ip.itemId].quantidade * item.valorUnitario).toFixed(2),
+            )
+            divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotalItem).toFixed(2))
+          }
+        })
+      }
+    })
+
+    console.log("Resultado final da divisão:", divisao)
+    setDivisaoResultado(divisao)
+  }, [contratoSelecionado, itensPedido, recursosSelecionados])
+
+  const transferirItem = useCallback(
+    (itemId: string, quantidade: number, recursoOrigemId: string, recursoDestinoId: string) => {
+      console.log("Iniciando transferência:", {
+        itemId,
+        quantidade,
+        recursoOrigemId,
+        recursoDestinoId,
+      })
+
+      setDivisaoResultado((prevDivisao) => {
+        if (!prevDivisao || !contratoSelecionado) {
+          console.error("Não há resultado de divisão ou contrato selecionado")
+          return prevDivisao
+        }
+
+        const novoResultado = JSON.parse(JSON.stringify(prevDivisao))
+        const item = contratoSelecionado.itens.find((i) => i.id === itemId)
+
+        if (!item) {
+          console.error("Item não encontrado:", itemId)
+          return prevDivisao
+        }
+
+        // Verificar se o item existe no recurso de origem e tem quantidade suficiente
+        if (
+          !novoResultado[recursoOrigemId]?.itens[itemId] ||
+          novoResultado[recursoOrigemId].itens[itemId].quantidade < quantidade
+        ) {
+          console.error("Quantidade inválida para transferência")
+          return prevDivisao
+        }
+
+        // Verificar se o recurso de destino é elegível para o item
+        if (!item.recursosElegiveis.includes(recursoDestinoId)) {
+          console.error("Recurso de destino não é elegível para este item")
+          return prevDivisao
+        }
+
+        const valorUnitario = item.valorUnitario
+        const valorTransferencia = Number((quantidade * valorUnitario).toFixed(2))
+
+        // Atualizar recurso de origem
+        novoResultado[recursoOrigemId].itens[itemId].quantidade -= quantidade
+        novoResultado[recursoOrigemId].itens[itemId].valorTotal = Number(
+          (novoResultado[recursoOrigemId].itens[itemId].quantidade * valorUnitario).toFixed(2),
+        )
+        novoResultado[recursoOrigemId].valorTotal = Number(
+          (novoResultado[recursoOrigemId].valorTotal - valorTransferencia).toFixed(2),
+        )
+
+        // Remover o item se a quantidade chegou a zero
+        if (novoResultado[recursoOrigemId].itens[itemId].quantidade === 0) {
+          delete novoResultado[recursoOrigemId].itens[itemId]
+        }
+
+        // Atualizar recurso de destino
+        if (!novoResultado[recursoDestinoId]) {
+          novoResultado[recursoDestinoId] = {
+            itens: {},
+            valorTotal: 0,
+          }
+        }
+
+        if (!novoResultado[recursoDestinoId].itens[itemId]) {
+          novoResultado[recursoDestinoId].itens[itemId] = {
             quantidade: 0,
             valorTotal: 0,
             nome: item.nome,
@@ -252,100 +374,20 @@ export function useDivisaoPedidos() {
           }
         }
 
-        divisao[recursoId].itens[ip.itemId].quantidade += quantidadeAtribuida
-        divisao[recursoId].itens[ip.itemId].valorTotal += valorTotalItem
-        divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotalItem).toFixed(2))
+        novoResultado[recursoDestinoId].itens[itemId].quantidade += quantidade
+        novoResultado[recursoDestinoId].itens[itemId].valorTotal = Number(
+          (novoResultado[recursoDestinoId].itens[itemId].quantidade * valorUnitario).toFixed(2),
+        )
+        novoResultado[recursoDestinoId].valorTotal = Number(
+          (novoResultado[recursoDestinoId].valorTotal + valorTransferencia).toFixed(2),
+        )
 
-        if (restante > 0) restante--
+        console.log("Novo resultado após transferência:", novoResultado)
+        return novoResultado
       })
-    })
-
-    console.log("Resultado final da divisão:", divisao)
-    setDivisaoResultado(divisao)
-  }, [contratoSelecionado, itensPedido, recursosSelecionados])
-
-  const transferirItem = (itemId: string, quantidade: number, recursoOrigemId: string, recursoDestinoId: string) => {
-    console.log("Iniciando transferência:", {
-      itemId,
-      quantidade,
-      recursoOrigemId,
-      recursoDestinoId,
-    })
-
-    setDivisaoResultado((prevDivisao) => {
-      if (!prevDivisao || !contratoSelecionado) {
-        console.error("Não há resultado de divisão ou contrato selecionado")
-        return prevDivisao
-      }
-
-      const novoResultado = JSON.parse(JSON.stringify(prevDivisao))
-      const item = contratoSelecionado.itens.find((i) => i.id === itemId)
-
-      if (!item) {
-        console.error("Item não encontrado:", itemId)
-        return prevDivisao
-      }
-
-      if (
-        !novoResultado[recursoOrigemId]?.itens[itemId] ||
-        novoResultado[recursoOrigemId].itens[itemId].quantidade < quantidade
-      ) {
-        console.error("Quantidade inválida para transferência")
-        return prevDivisao
-      }
-
-      const valorUnitario = item.valorUnitario
-      const valorTransferencia = Number((quantidade * valorUnitario).toFixed(2))
-
-      // Atualiza recurso de origem
-      const quantidadeRestanteOrigem = novoResultado[recursoOrigemId].itens[itemId].quantidade - quantidade
-
-      if (quantidadeRestanteOrigem > 0) {
-        novoResultado[recursoOrigemId].itens[itemId] = {
-          ...novoResultado[recursoOrigemId].itens[itemId],
-          quantidade: quantidadeRestanteOrigem,
-          valorTotal: Number((quantidadeRestanteOrigem * valorUnitario).toFixed(2)),
-        }
-      } else {
-        delete novoResultado[recursoOrigemId].itens[itemId]
-      }
-
-      novoResultado[recursoOrigemId].valorTotal = Number(
-        (novoResultado[recursoOrigemId].valorTotal - valorTransferencia).toFixed(2),
-      )
-
-      // Atualiza recurso de destino
-      if (!novoResultado[recursoDestinoId]) {
-        novoResultado[recursoDestinoId] = {
-          itens: {},
-          valorTotal: 0,
-        }
-      }
-
-      if (!novoResultado[recursoDestinoId].itens[itemId]) {
-        novoResultado[recursoDestinoId].itens[itemId] = {
-          quantidade: 0,
-          valorTotal: 0,
-          nome: item.nome,
-          unidade: item.unidade,
-          valorUnitario: item.valorUnitario,
-          recursosElegiveis: item.recursosElegiveis,
-        }
-      }
-
-      novoResultado[recursoDestinoId].itens[itemId].quantidade += quantidade
-      novoResultado[recursoDestinoId].itens[itemId].valorTotal = Number(
-        (novoResultado[recursoDestinoId].itens[itemId].quantidade * valorUnitario).toFixed(2),
-      )
-
-      novoResultado[recursoDestinoId].valorTotal = Number(
-        (novoResultado[recursoDestinoId].valorTotal + valorTransferencia).toFixed(2),
-      )
-
-      console.log("Novo resultado após transferência:", novoResultado)
-      return novoResultado
-    })
-  }
+    },
+    [contratoSelecionado],
+  )
 
   const exportarParaPlanilha = () => {
     if (!divisaoResultado || !contratoSelecionado) return
@@ -406,6 +448,7 @@ export function useDivisaoPedidos() {
     transferirItem,
     exportarParaPlanilha,
     RECURSOS_PREDEFINIDOS,
+    RECURSOS_PRIORITARIOS,
   }
 }
 
