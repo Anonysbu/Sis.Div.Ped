@@ -21,6 +21,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Switch } from "@/components/ui/switch"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import Image from "next/image"
 
 export default function DivisaoPedidos() {
   const {
@@ -268,7 +269,7 @@ export default function DivisaoPedidos() {
   return (
     <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
       <div className="flex items-center justify-center mb-6">
-        <Calculator className="h-10 w-10 text-blue-600 mr-4" />
+        <Image src="/icon.png" alt="Sistema de Divisão de Pedidos" width={32} height={32} className="mr-4" />
         <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-600 bg-white px-4 py-2 rounded-lg shadow-md">
           Sistema de Divisão de Pedidos
         </h1>
@@ -283,7 +284,7 @@ export default function DivisaoPedidos() {
 
       <Dialog>
         <DialogTrigger asChild>
-          <div className="flex justify-center w-full mb-6">
+          <div className="flex justify-start w-full mb-6">
             <Button className="w-full max-w-md bg-blue-600 hover:bg-blue-700 text-white">
               <PlusCircle className="h-5 w-5 mr-2" />
               Adicionar Novo Contrato

@@ -459,7 +459,7 @@ export function useDivisaoPedidos() {
           else {
             ws[cell_ref].s = {
               font: { color: { rgb: "000000" } },
-              alignment: { horizontal: "center", vertical: "center", wrapText: true },
+              alignment: { horizontal: C === 0 ? "center" : "left", vertical: "center", wrapText: true },
               border: {
                 top: { style: "thin", color: { rgb: "000000" } },
                 bottom: { style: "thin", color: { rgb: "000000" } },
