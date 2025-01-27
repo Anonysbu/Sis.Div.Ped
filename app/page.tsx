@@ -321,16 +321,20 @@ export default function DivisaoPedidos() {
         )}
       </div>
 
-      {divisaoResultado && Object.keys(divisaoResultado).length > 0 && (
+      {divisaoResultado && Object.keys(divisaoResultado).length > 0 ? (
         <Card className="bg-white shadow-md">
           <CardHeader>
             <CardTitle className="text-lg font-semibold text-blue-600">Resultado da Divisão</CardTitle>
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-[400px]">
+              {console.log("Dados da divisão:", divisaoResultado)}
               {Object.entries(divisaoResultado).map(([recursoId, dados]) => {
                 const recurso = RECURSOS_PREDEFINIDOS.find((r) => r.id === recursoId)
-                if (!recurso || !dados || Object.keys(dados.itens).length === 0) return null
+                if (!recurso || !dados || !dados.itens || Object.keys(dados.itens).length === 0) {
+                  console.log("Recurso sem itens:", recursoId, dados)
+                  return null
+                }
 
                 return (
                   <Accordion type="single" collapsible className="mb-4" key={recursoId}>
@@ -343,6 +347,7 @@ export default function DivisaoPedidos() {
                       </AccordionTrigger>
                       <AccordionContent>
                         <ul className="space-y-2">
+                          {console.log("Itens do recurso:", recursoId, dados.itens)}
                           {Object.entries(dados.itens).map(([itemId, itemDados]) => {
                             const item = contratoSelecionado?.itens.find((i) => i.id === itemId)
                             if (!item) return null
@@ -433,6 +438,8 @@ export default function DivisaoPedidos() {
             </ScrollArea>
           </CardContent>
         </Card>
+      ) : (
+        <p className="text-center text-gray-600">Nenhum item para exibir no resultado da divisão.</p>
       )}
     </div>
   )
