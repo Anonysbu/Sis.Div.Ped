@@ -46,11 +46,11 @@ type DivisaoResultado = {
 
 const RECURSOS_PREDEFINIDOS: Recurso[] = [
   { id: "cozinha", nome: "COZINHA COMUNITÁRIA" },
-  { id: "casa", nome: "CASA DE APOIO" },
+  { id: "casa", nome: "CASA DE APOIO -FMAS " },
   { id: "abrigo", nome: "ABRIGO" },
-  { id: "cras", nome: "CRAS" },
-  { id: "creas", nome: "CREAS" },
-  { id: "scfv", nome: "SCFV" },
+  { id: "cras", nome: "CRAS - PSB" },
+  { id: "creas", nome: "CREAS - PSE" },
+  { id: "scfv", nome: "SCFV - PSB" },
   { id: "igd", nome: "IGD" },
   { id: "crianca", nome: "CRIANÇA FELIZ" },
 ]
