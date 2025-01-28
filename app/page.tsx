@@ -268,9 +268,9 @@ export default function DivisaoPedidos() {
 
   return (
     <div className="container mx-auto p-4 bg-gray-50 min-h-screen">
-      <div className="flex items-center justify-center mb-6">
+      <div className="flex items-center justify-center mb-6 bg-white px-4 py-2 rounded-lg shadow-md">
         <Image src="/icon2.png" alt="Sistema de Divisão de Pedidos" width={61} height={61} className="mr-4" />
-        <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-600 bg-white px-4 py-2 rounded-lg shadow-md">
+        <h1 className="text-3xl md:text-4xl font-bold text-center text-blue-600">
           Sistema de Divisão de Pedidos
         </h1>
       </div>
