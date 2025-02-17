@@ -41,14 +41,28 @@ export default function DivisaoPedidos() {
     RECURSOS_PREDEFINIDOS,
   } = useDivisaoPedidos()
 
-  const [novoContrato, setNovoContrato] = useState({ nome: "", itens: [] })
-  const [novoItem, setNovoItem] = useState({ nome: "", unidade: "", valorUnitario: 0, recursosElegiveis: [] })
+  const [novoContrato, setNovoContrato] = useState<{
+    nome: string;
+    itens: Array<{
+      id: string;
+      nome: string;
+      unidade: string;
+      valorUnitario: number;
+      recursosElegiveis: string[];
+    }>;
+  }>({ nome: "", itens: [] })
+
+  const [novoItem, setNovoItem] = useState<{
+    nome: string;
+    unidade: string;
+    valorUnitario: number;
+    recursosElegiveis: string[];
+  }>({ nome: "", unidade: "", valorUnitario: 0, recursosElegiveis: [] })
   const [quantidadeTransferencia, setQuantidadeTransferencia] = useState<{ [key: string]: number }>({})
   const [recursoDestino, setRecursoDestino] = useState<{ [key: string]: string }>({})
   const [todosRecursosSelecionados, setTodosRecursosSelecionados] = useState(false)
   const [todosRecursosElegiveis, setTodosRecursosElegiveis] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [debugLastUpdate, setDebugLastUpdate] = useState<string>("")
 
   const handleAdicionarItemAoContrato = useCallback(() => {
     setNovoContrato((prev) => ({
@@ -71,14 +85,7 @@ export default function DivisaoPedidos() {
     (itemId: string, recursoOrigemId: string) => {
       const quantidade = Number(quantidadeTransferencia[`${itemId}-${recursoOrigemId}`]) || 0
       const destino = recursoDestino[`${itemId}-${recursoOrigemId}`]
-
-      console.log("Tentando transferir:", {
-        itemId,
-        quantidade,
-        origem: recursoOrigemId,
-        destino,
-      })
-
+      
       if (destino && quantidade > 0) {
         transferirItem(itemId, quantidade, recursoOrigemId, destino)
         // Reset the transfer form
@@ -137,13 +144,6 @@ export default function DivisaoPedidos() {
     }
     calcularDivisao()
   }, [contratoSelecionado, itensPedido, recursosSelecionados, calcularDivisao])
-
-  useEffect(() => {
-    if (divisaoResultado) {
-      setDebugLastUpdate(new Date().toISOString())
-      console.log("Divisão atualizada:", divisaoResultado)
-    }
-  }, [divisaoResultado])
 
   const renderDivisaoContent = () => {
     if (!divisaoResultado || Object.keys(divisaoResultado).length === 0) {
@@ -503,32 +503,9 @@ export default function DivisaoPedidos() {
       <Card className="bg-white shadow-md">
         <CardHeader>
           <CardTitle className="text-lg font-semibold text-blue-600">Resultado da Divisão</CardTitle>
-          {process.env.NODE_ENV === "development" && (
-            <div className="text-xs text-gray-500">Última atualização: {debugLastUpdate}</div>
-          )}
         </CardHeader>
         <CardContent>{renderDivisaoContent()}</CardContent>
       </Card>
-
-      {process.env.NODE_ENV === "development" && (
-        <div className="mt-8 p-4 bg-gray-100 rounded-lg">
-          <h3 className="text-lg font-bold mb-2">Debug Info:</h3>
-          <div className="space-y-2">
-            <p>Contrato Selecionado: {contratoSelecionado?.nome || "Nenhum"}</p>
-            <p>Recursos Selecionados: {recursosSelecionados.join(", ") || "Nenhum"}</p>
-            <p>Itens com quantidade:</p>
-            <pre className="bg-white p-2 rounded">
-              {JSON.stringify(
-                itensPedido.filter((ip) => ip.quantidade > 0),
-                null,
-                2,
-              )}
-            </pre>
-            <p>Resultado da Divisão:</p>
-            <pre className="bg-white p-2 rounded">{JSON.stringify(divisaoResultado, null, 2)}</pre>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

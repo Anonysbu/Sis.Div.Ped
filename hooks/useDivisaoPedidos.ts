@@ -173,7 +173,7 @@ export function useDivisaoPedidos() {
     )
   }
 
-  const calcularDivisao = useCallback(() => {
+const calcularDivisao = useCallback(() => {
     console.log("Iniciando cálculo da divisão")
     if (!contratoSelecionado) {
       console.error("Nenhum contrato selecionado")
@@ -221,25 +221,24 @@ export function useDivisaoPedidos() {
         return
       }
 
-      // Separar recursos prioritários e não prioritários
-      const recursosPrioritarios = recursosElegiveisDisponiveis.filter((r) => RECURSOS_PRIORITARIOS.includes(r))
-      const recursosNaoPrioritarios = recursosElegiveisDisponiveis.filter((r) => !RECURSOS_PRIORITARIOS.includes(r))
+      // Separar recursos prioritários e não prioritários entre os elegíveis
+      const recursosPrioritarios = recursosElegiveisDisponiveis.filter((r) => RECURSOS_PRIORITARIOS.includes(r));
+      const recursosNaoPrioritarios = recursosElegiveisDisponiveis.filter((r) => !RECURSOS_PRIORITARIOS.includes(r));
 
-      const quantidadeTotal = ip.quantidade
-      let quantidadeRestante = quantidadeTotal
+      const quantidadeTotal = ip.quantidade;
+      let quantidadeRestante = quantidadeTotal;
 
-      // Distribuir 60% para recursos prioritários, se houver
-      if (recursosPrioritarios.length > 0) {
-        const quantidadePrioritaria = Math.floor(quantidadeTotal * 0.6)
-        const quantidadePorRecursoPrioritario = Math.floor(quantidadePrioritaria / recursosPrioritarios.length)
-        let restantePrioritario = quantidadePrioritaria % recursosPrioritarios.length
+      // Se houver apenas recursos prioritários elegíveis
+      if (recursosPrioritarios.length > 0 && recursosNaoPrioritarios.length === 0) {
+        const quantidadePorRecurso = Math.floor(quantidadeTotal / recursosPrioritarios.length);
+        let restante = quantidadeTotal % recursosPrioritarios.length;
 
         recursosPrioritarios.forEach((recursoId) => {
-          const quantidadeAtribuida = quantidadePorRecursoPrioritario + (restantePrioritario > 0 ? 1 : 0)
-          if (restantePrioritario > 0) restantePrioritario--
+          const quantidadeAtribuida = quantidadePorRecurso + (restante > 0 ? 1 : 0);
+          if (restante > 0) restante--;
 
           if (quantidadeAtribuida > 0) {
-            const valorTotalItem = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2))
+            const valorTotalItem = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2));
 
             if (!divisao[recursoId].itens[ip.itemId]) {
               divisao[recursoId].itens[ip.itemId] = {
@@ -249,31 +248,30 @@ export function useDivisaoPedidos() {
                 unidade: item.unidade,
                 valorUnitario: item.valorUnitario,
                 recursosElegiveis: item.recursosElegiveis,
-              }
+              };
             }
 
-            divisao[recursoId].itens[ip.itemId].quantidade += quantidadeAtribuida
+            divisao[recursoId].itens[ip.itemId].quantidade += quantidadeAtribuida;
             divisao[recursoId].itens[ip.itemId].valorTotal = Number(
-              (divisao[recursoId].itens[ip.itemId].quantidade * item.valorUnitario).toFixed(2),
-            )
-            divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotalItem).toFixed(2))
+              (divisao[recursoId].itens[ip.itemId].quantidade * item.valorUnitario).toFixed(2)
+            );
+            divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotalItem).toFixed(2));
 
-            quantidadeRestante -= quantidadeAtribuida
+            quantidadeRestante -= quantidadeAtribuida;
           }
-        })
+        });
       }
-
-      // Distribuir o restante para recursos não prioritários
-      if (recursosNaoPrioritarios.length > 0 && quantidadeRestante > 0) {
-        const quantidadePorRecurso = Math.floor(quantidadeRestante / recursosNaoPrioritarios.length)
-        let restante = quantidadeRestante % recursosNaoPrioritarios.length
+      // Se houver apenas recursos não prioritários elegíveis
+      else if (recursosPrioritarios.length === 0 && recursosNaoPrioritarios.length > 0) {
+        const quantidadePorRecurso = Math.floor(quantidadeTotal / recursosNaoPrioritarios.length);
+        let restante = quantidadeTotal % recursosNaoPrioritarios.length;
 
         recursosNaoPrioritarios.forEach((recursoId) => {
-          const quantidadeAtribuida = quantidadePorRecurso + (restante > 0 ? 1 : 0)
-          if (restante > 0) restante--
+          const quantidadeAtribuida = quantidadePorRecurso + (restante > 0 ? 1 : 0);
+          if (restante > 0) restante--;
 
           if (quantidadeAtribuida > 0) {
-            const valorTotalItem = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2))
+            const valorTotalItem = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2));
 
             if (!divisao[recursoId].itens[ip.itemId]) {
               divisao[recursoId].itens[ip.itemId] = {
@@ -283,16 +281,86 @@ export function useDivisaoPedidos() {
                 unidade: item.unidade,
                 valorUnitario: item.valorUnitario,
                 recursosElegiveis: item.recursosElegiveis,
-              }
+              };
             }
 
-            divisao[recursoId].itens[ip.itemId].quantidade += quantidadeAtribuida
+            divisao[recursoId].itens[ip.itemId].quantidade += quantidadeAtribuida;
             divisao[recursoId].itens[ip.itemId].valorTotal = Number(
-              (divisao[recursoId].itens[ip.itemId].quantidade * item.valorUnitario).toFixed(2),
-            )
-            divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotalItem).toFixed(2))
+              (divisao[recursoId].itens[ip.itemId].quantidade * item.valorUnitario).toFixed(2)
+            );
+            divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotalItem).toFixed(2));
+
+            quantidadeRestante -= quantidadeAtribuida;
           }
-        })
+        });
+      }
+      // Se houver ambos os tipos de recursos elegíveis
+      else if (recursosPrioritarios.length > 0 && recursosNaoPrioritarios.length > 0) {
+        // Distribuir 60% para recursos prioritários
+        const quantidadePrioritaria = Math.floor(quantidadeTotal * 0.6);
+        const quantidadePorRecursoPrioritario = Math.floor(quantidadePrioritaria / recursosPrioritarios.length);
+        let restantePrioritario = quantidadePrioritaria % recursosPrioritarios.length;
+
+        // Distribuir entre recursos prioritários
+        recursosPrioritarios.forEach((recursoId) => {
+          const quantidadeAtribuida = quantidadePorRecursoPrioritario + (restantePrioritario > 0 ? 1 : 0);
+          if (restantePrioritario > 0) restantePrioritario--;
+
+          if (quantidadeAtribuida > 0) {
+            const valorTotalItem = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2));
+
+            if (!divisao[recursoId].itens[ip.itemId]) {
+              divisao[recursoId].itens[ip.itemId] = {
+                quantidade: 0,
+                valorTotal: 0,
+                nome: item.nome,
+                unidade: item.unidade,
+                valorUnitario: item.valorUnitario,
+                recursosElegiveis: item.recursosElegiveis,
+              };
+            }
+
+            divisao[recursoId].itens[ip.itemId].quantidade += quantidadeAtribuida;
+            divisao[recursoId].itens[ip.itemId].valorTotal = Number(
+              (divisao[recursoId].itens[ip.itemId].quantidade * item.valorUnitario).toFixed(2)
+            );
+            divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotalItem).toFixed(2));
+
+            quantidadeRestante -= quantidadeAtribuida;
+          }
+        });
+
+        // Distribuir 40% restante para recursos não prioritários
+        if (quantidadeRestante > 0) {
+          const quantidadePorRecurso = Math.floor(quantidadeRestante / recursosNaoPrioritarios.length);
+          let restante = quantidadeRestante % recursosNaoPrioritarios.length;
+
+          recursosNaoPrioritarios.forEach((recursoId) => {
+            const quantidadeAtribuida = quantidadePorRecurso + (restante > 0 ? 1 : 0);
+            if (restante > 0) restante--;
+
+            if (quantidadeAtribuida > 0) {
+              const valorTotalItem = Number((quantidadeAtribuida * item.valorUnitario).toFixed(2));
+
+              if (!divisao[recursoId].itens[ip.itemId]) {
+                divisao[recursoId].itens[ip.itemId] = {
+                  quantidade: 0,
+                  valorTotal: 0,
+                  nome: item.nome,
+                  unidade: item.unidade,
+                  valorUnitario: item.valorUnitario,
+                  recursosElegiveis: item.recursosElegiveis,
+                };
+              }
+
+              divisao[recursoId].itens[ip.itemId].quantidade += quantidadeAtribuida;
+              divisao[recursoId].itens[ip.itemId].valorTotal = Number(
+                (divisao[recursoId].itens[ip.itemId].quantidade * item.valorUnitario).toFixed(2)
+              );
+              divisao[recursoId].valorTotal = Number((divisao[recursoId].valorTotal + valorTotalItem).toFixed(2));
+            }
+          });
+        }
       }
     })
 
